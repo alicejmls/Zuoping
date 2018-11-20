@@ -1,0 +1,82 @@
+﻿
+@{
+    Layout = null;
+}
+
+
+
+    <script>
+        $(function () {
+            $("#memberTab").datagrid({
+                url: '/StatisticalCenter/GetMemberTab',
+                columns: [[
+                    { field: "MC_ID", title: "", width: 40 },
+                    { field: "MC_CardID", title: "会员卡号", width: 120 },
+                    { field: "MC_Name", title: "会员姓名", width: 120 },
+                    { field: "MC_TotalMoney", title: "累计消费", width: 120 },
+
+                ]],
+                pagination: true,
+                pageSize: 5,
+                pageList: [5, 10, 15],
+            });
+
+            $("#memberConsumeTab").datagrid({
+                url: '/StatisticalCenter/GetMemberConsumeTab',
+                columns: [[
+                    { field: "CO_ID", title: "", width: 40 },
+                    { field: "CO_OrderCode", title: "订单号", width: 120 },
+                    { field: "MC_CardID", title: "会员卡号", width: 120 },
+                    { field: "MC_Name", title: "会员姓名", width: 120 },
+                    { field: "CO_DiscountMoney", title: "消费金额", width: 120 },
+                    { field: "CO_GavePoint", title: "获得积分", width: 120 },
+                    {
+                        field: "CO_CreateTime", title: "消费时间", width: 200,
+                        formatter: function (value, rec) {
+                            return new Date(parseInt(value.substr(6, 13))).toLocaleDateString();
+                        }
+                    },
+                    //{ field: "CO_GavePoint", title: "支付方式", width: 120 },
+                    { field: "CI_Name", title: "类型", width: 120 },
+
+                ]],
+                pagination: true,
+                pageSize: 10,
+                pageList: [10, 20, 30],
+            });
+
+            $("#btnCx2").click(function () {
+                $("#memberConsumeTab").datagrid("reload", { sTime: $("#txtSTime2").datebox('getValue'), eTime: $("#txtETime2").datebox('getValue'), cardId: $("#txtCardId2").val(), xtype: $("#selxtype2").val() });
+            })
+        })
+
+    </script>
+
+    <fieldset>
+        <legend><b>查询</b></legend>
+
+        消费日期：  <input id="txtSTime2" type="text" class="easyui-datebox" required="required">
+        至<input id="txtETime2" type="text" class="easyui-datebox" required="required">
+
+
+        卡号/手机： <input id="txtCardId2" type="text" />
+
+        消费类型：<select id="selxtype2">
+            <option value="null">不限消费类型</option>
+            @foreach (var item in ViewBag.LevelName)
+            {
+                <option value="@item.CI_ID">@item.CI_Name</option>
+            }
+        </select>
+        <input id="btnCx2" class="btn" type="button" value="查询" />
+     
+    </fieldset>
+    <br />
+    <table id="memberTab"></table>
+    <br />
+    <table id="memberConsumeTab"></table>
+
+
+    
+
+

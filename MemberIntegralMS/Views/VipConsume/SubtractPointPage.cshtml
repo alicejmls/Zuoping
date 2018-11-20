@@ -1,0 +1,139 @@
+﻿@{
+    Layout = null;
+}
+
+
+
+<script>
+    
+    $(function () {
+
+
+        $("#lblSubCsmTime").text(new Date().Format("yyyy-MM-dd HH:mm:ss"));
+        $("#btnSubConsumeQuery").click(function () {
+     
+            if ($("#txtSubMC_CardIDOrMC_Mobile").val() == "") {
+                $("#lblSubMC_CardIDOrMC_Mobile").text("* 必填");
+                return;
+            }
+
+            $.getJSON("/VipConsume/QueryVipIdOrTel", { MC_CardID: $("#txtSubMC_CardIDOrMC_Mobile").val(), MC_Mobile: $("#txtSubMC_CardIDOrMC_Mobile").val() }, function (d) {
+                if (d.pd=="-1") {
+                    $("#lblSubMC_CardIDOrMC_Mobile").text("* 手机号有重复的，请检查数据库数据是否合法");
+                    return;
+                }
+                else if (d.pd == "0") {
+                    $("#lblSubMC_CardIDOrMC_Mobile").text("* 卡号或手机号不存在");
+                    return;
+                }
+                else if (d.pd == "1") {
+                    $("#lblSubMC_CardIDOrMC_Mobile").text("");
+                    $("#lblSubCsmMC_Name").text(d.mc[0].MC_Name);
+                    $("#lblSubCsmCL_ID").text(d.mc[0].CL_LevelName + "(折扣比例：" + d.mc[0].CL_Percent+")" );
+                    $("#lblSubCsmMC_Point").text(d.mc[0].MC_Point);
+                    $("#lblSubCsmMC_TotalMoney").text("￥" + d.mc[0].MC_TotalMoney);
+                    $("#lblSubCsmMC_ID").text(d.mc[0].MC_ID);
+                    $("#lblSubCsmMC_CardID").text(d.mc[0].MC_CardID);
+                }
+            })
+        })
+
+        var b = 0;
+        $("#txtSubPoint").blur(function () {
+
+            if ($("#txtSubPoint").val() == "") {
+                $("#lblSubCsmMoneys").text("* 必填");
+                return;
+            }
+            if (isNaN(parseInt($("#txtSubPoint").val()))) {
+                $("#lblSubCsmMoneys").text("* 只能是数字");
+                return;
+            }
+            if (parseInt($("#txtSubPoint").val())<0) {
+                $("#lblSubCsmMoneys").text("* 不能小于0");
+                return;
+            }
+            b = 1;
+            $("#lblSubCsmMoneys").text("");
+           
+        })
+        //马上扣除
+        $("#btnSubCsmUpdate").mousedown(function () {
+            $("#btnSubConsumeQuery").click();
+            $("#txtSubPoint").blur();
+            if (b < 1) {
+                return;
+            }
+            var data = {
+                MC_ID: parseInt($("#lblSubCsmMC_ID").text()),
+                MC_CardID: $("#lblSubCsmMC_CardID").text(),
+                CO_GavePoint: parseInt($("#txtSubPoint").val()),
+                CO_Remark: $("#txtCO_Remark").val()
+            }
+
+            $.getJSON("/VipConsume/SubtractPoint", data, function (d) {
+                if (d) {
+                    alert("操作成功");
+                    $("#btnSubConsumeQuery").click();
+                }
+
+            })
+
+        })
+
+    })
+
+
+</script>
+<br />
+
+<br />
+<h3>查找会员</h3>
+
+
+<table>
+    <tr>
+        <td>卡号/手机：</td>
+        <td><input style="width:150px" id="txtSubMC_CardIDOrMC_Mobile" />&nbsp;<a id="btnSubConsumeQuery" class="easyui-linkbutton" data-options="iconCls:'icon-search'">查找</a><label id="lblSubMC_CardIDOrMC_Mobile" style="color:red"></label></td>
+        <td>消费时间：</td>
+        <td><label id="lblSubCsmTime"></label></td>
+    </tr>
+    <tr>
+        <td>姓名：</td>
+        <td><label id="lblSubCsmMC_Name"></label></td>
+        <td>等级：</td>
+        <td><label id="lblSubCsmCL_ID"></label></td>
+    </tr>
+    <tr>
+        <td>当前积分：</td>
+        <td><label id="lblSubCsmMC_Point"></label></td>
+        <td>累计消费：</td>
+        <td><label id="lblSubCsmMC_TotalMoney">￥</label></td>
+    </tr>
+</table>
+<br />
+
+<label id="lblSubCsmCL_Point" hidden="hidden"></label>
+<label id="lblSubCsmCL_Percent" hidden="hidden"></label>
+<label id="lblSubCsmMC_ID" hidden="hidden"></label>
+<label id="lblSubCsmMC_CardID" hidden="hidden"></label>
+
+<h4>减积分信息</h4><br />
+<table>
+    <tr>
+        <td>扣除积分：</td>
+        <td><input style="width:150px" id="txtSubPoint" /><label style="color:red" id="lblSubCsmMoneys"></label></td>
+        
+    </tr>
+    <tr>
+        <td>备注：</td>
+        <td><input style="width:150px" id="txtCO_Remark" /></td>
+        
+    </tr>
+</table>
+<br />
+
+<a id="btnSubCsmUpdate" class="easyui-linkbutton" data-options="iconCls:'icon-ok'">马上扣除</a>
+
+
+

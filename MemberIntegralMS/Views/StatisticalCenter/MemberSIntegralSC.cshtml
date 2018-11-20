@@ -1,0 +1,79 @@
+﻿
+@{
+    Layout = null;
+}
+
+
+    <script>
+        $(function () {
+            $("#SintegralTab").datagrid({
+                url: '/StatisticalCenter/GetSintegralTab',
+                columns: [[
+                    { field: "CO_ID", title: "", width: 40 },
+                    { field: "CO_OrderCode", title: "订单编号", width: 120 },
+                    { field: "MC_CardID", title: "会员卡号", width: 120 },
+                    { field: "MC_Name", title: "会员姓名", width: 120 },
+                    { field: "CL_LevelName", title: "会员等级", width: 120 },
+                    { field: "CO_GavePoint", title: "减去积分", width: 120 },
+                    {
+                        field: "CO_CreateTime", title: "消费时间", width: 200,
+                        formatter: function (value, rec) {
+                            return new Date(parseInt(value.substr(6, 13))).toLocaleDateString();
+                        }
+                    },
+                    { field: "CO_Remark", title: "备注", width: 120 },
+                ]],
+                pagination: true,
+                pageSize: 5,
+                pageList: [5, 10, 15],
+            });
+
+            $("#btnCx1").click(function () {
+                $("#SintegralTab").datagrid("reload", { sTime: $("#txtSTime1").datebox('getValue'), eTime: $("#txtETime1").datebox('getValue'), cardId: $("#txtCardId1").val(), mDj: $("#selMcDj1").val(), oCode: $("#txtStateID1").val(), fh: $("#selXMoney1").val(), xMoney: $("#txtXMoney1").val() });
+            })
+        })
+    </script>
+
+    <fieldset>
+        <legend><b>查询</b></legend>
+        <table>
+            <tr>
+                <td>消费日期：</td>
+                <td><input id="txtSTime1" type="text" class="easyui-datebox" required="required"></td>
+                <td>至<input id="txtETime1" type="text" class="easyui-datebox" required="required"></td>
+
+            </tr>
+            <tr>
+                <td>卡号/手机：</td>
+                <td><input id="txtCardId1" type="text" /></td>
+                <td>
+                    会员等级：<select id="selMcDj1">
+                        <option value="null">请选择</option>
+                        @foreach (var item in ViewBag.LevelName)
+                        {
+                            <option value="@item.CL_ID">@item.CL_LevelName</option>
+                        }
+                    </select>
+                </td>
+                <td>
+                    减去积分:<select id="selXMoney1">
+                        <option value="0" selected>>=</option>
+                        <option value="1">></option>
+                        <option value="2">=</option>
+                    </select>
+                    <input id="txtXMoney1" type="text" />
+                    <input id="btnCx1" class="btn" type="button" value="查询" />
+                  
+                </td>
+            </tr>
+            <tr>
+                <td>订单号：</td>
+                <td><input id="txtStateID1" type="text" /></td>
+
+            </tr>
+        </table>
+    </fieldset>
+
+    <table id="SintegralTab"></table>
+
+

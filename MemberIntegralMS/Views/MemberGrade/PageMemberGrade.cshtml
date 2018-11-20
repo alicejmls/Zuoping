@@ -1,0 +1,93 @@
+﻿
+@{
+    Layout = null;
+}
+
+<br />
+
+<div style="margin-left:10px;">
+    <div>
+        <a  class="easyui-linkbutton" onclick="MgTancAdd()" data-options="iconCls:'icon-add'">新增</a>
+        <a  class="easyui-linkbutton" onclick="MgUpdate()" data-options="iconCls:'icon-edit'">修改</a>
+        <a  class="easyui-linkbutton" onclick="MgDelete()" data-options="iconCls:'icon-no'">删除</a>
+    </div>
+    <div>
+        等级名称：<input id="txtMgCL_LevelName" type="text" />
+        <a  class="easyui-linkbutton" onclick="MgQuery()" data-options="iconCls:'icon-search'">查询</a>
+    </div>
+    <div id="MenTbLevels"></div>
+    <div id="MgUpOrAddFrom"></div>
+</div>
+<script>
+        $(function () {
+
+            MgQuery();
+        })
+        //弹出添加窗口
+        function MgTancAdd() {
+            $("#MenTbLevels").datagrid('clearSelections');
+            $("#MgUpOrAddFrom").dialog({
+                title: "新增",						//弹出界面的标题
+                width: 420,
+                height: 260,
+                href: "/MemberGrade/PageMgAddOrUpdate",	//弹出界面的url地址
+                modal: true						//是否是模态窗口
+            })
+        }
+        //修改方法
+        function MgUpdate() {
+
+            var rows = $("#MenTbLevels").datagrid('getSelected');
+            if (rows == null) {
+                alert("请选择要修改的项");
+                return;
+            }
+            $("#MgUpOrAddFrom").dialog({
+                title: "修改",						//弹出界面的标题
+                width: 420,
+                height: 260,
+                href: "/MemberGrade/PageMgAddOrUpdate",		//弹出界面的url地址
+                modal: true						//是否是模态窗口
+
+            })
+        }
+        //删除方法
+        function MgDelete() {
+            var rows = $("#MenTbLevels").datagrid('getSelected');
+            if (rows == null) {
+                alert("请选择要删除的项");
+                return;
+            }
+            var r = confirm("确认删除？");
+            if (!r) {
+                return;
+            }
+
+            $.getJSON("/MemberGrade/MgGlDelete", { CL_ID: rows.CL_ID }, function (e) {
+                alert(e ? "删除成功" : "系统异常无法删除！");
+                $("#MenTbLevels").datagrid("reload");
+            })
+        }
+        //查询方法
+        function MgQuery() {
+            $("#MenTbLevels").datagrid({
+                url: '/MemberGrade/QueryCardLevels',
+                queryParams: {
+                    CL_LevelName: $("#txtMgCL_LevelName").val()
+                },
+                columns: [[
+
+                    { field: 'CL_ID', title: '等级编号' },
+                    { field: 'CL_LevelName', title: '等级名称' },
+                    { field: 'CL_NeedPoint', title: '所属最大积分' },
+                    { field: 'CL_Point', title: '扣分比例' },
+                    { field: 'CL_Percent', title: '折扣比例' }
+                    
+                ]],
+                singleSelect: true,
+                pagination: true,
+                pageSize: 5,
+                pageList: [5, 10, 15]
+            });
+        }
+</script>

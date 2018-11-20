@@ -1,0 +1,323 @@
+﻿
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+@model MemberIntegralMS.Users
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <meta name="copyright" content="All Rights Reserved, Copyright (C) 2013, Wuyeguo, Ltd." />
+    <title>会员积分管理系统</title>
+    <style>
+        .btn {
+            border-radius: 4px;
+            cursor: pointer;
+            border-style: none;
+            width: 90px;
+            height: 35px;
+            border: solid 2px #303641;
+            background-color: #303641;
+            font-size: 15px;
+            font-family: 微软雅黑;
+            color: White
+        }
+
+        .section {
+            width: 915px;
+            border: 1px solid #ccc;
+        }
+
+        #barsDemo {
+            width: 100%;
+            height: 400px;
+        }
+    </style>
+    <link rel="stylesheet" type="text/css" href="~/easyui/1.3.4/themes/default/easyui.css" />
+    <link rel="stylesheet" type="text/css" href="~/css/wu.css" />
+    <link rel="stylesheet" type="text/css" href="~/css/icon.css" />
+    <link rel="stylesheet" type="text/css" href="~/easyui/1.3.4/themes/icon.css" />
+    <link rel="stylesheet" type="text/css" href="~/easyui/1.3.4/themes/color.css" />
+
+    <script type="text/javascript" src="~/js/jquery-1.8.0.min.js"></script>
+    <script type="text/javascript" src="~/easyui/1.3.4/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="~/easyui/1.3.4/locale/easyui-lang-zh_CN.js"></script>
+    <script src="~/js/spig.js"></script>
+    <link href="~/css/spigPet.css" rel="stylesheet" />
+    <script src="~/echarts/echarts.common.min.js"></script>
+    <script src="~/echarts/echarts.min.js"></script>
+    <script src="~/echarts/echartsOne.js"></script>
+    <script src="~/echarts/echartsZhuz.js"></script>
+
+    <script>
+        var isindex = true;
+        var visitor = true;
+      
+        $(function () {
+          
+            //防止按钮被连续点击
+            $(".easyui-linkbutton").click(function () {
+                if (this.isrunning) {
+                    return false;
+                }
+                return true;
+            })
+
+            //修改个人信息的点击事件
+            $("#updatePersonal").click(function () {
+                $("#divShow").dialog({
+                    title: "修改个人资料",			//弹出界面的标题
+                    width: 300,
+                    height: 260,
+                    href: "/Index/PageUpdateUser",		//弹出界面的url地址
+                    modal: true						//是否是模态窗口
+                })
+                return false;
+            })
+
+            //修改密码
+            $("#updatePassword").click(function () {
+                $("#divShow").dialog({
+                    title: "修改密码",			//弹出界面的标题
+                    width: 300,
+                    height: 260,
+                    href: "/Index/PageUpdatePwd",		//弹出界面的url地址
+                    modal: true						//是否是模态窗口
+                })
+                return false;
+            })
+
+            //退出登录
+            $("#logOut").click(function () {
+                $.getJSON("/Index/LogOut", function (d) {
+                    window.location.href = "/Login/Login";
+                })
+                return false;
+            })
+            
+        })
+
+        //当前时间格式化问题
+        Date.prototype.Format = function (fmt) {
+            var o = {
+                "M+": this.getMonth() + 1, //月份
+                "d+": this.getDate(), //日
+                "H+": this.getHours(), //小时
+                "m+": this.getMinutes(), //分
+                "s+": this.getSeconds(), //秒
+                "q+": Math.floor((this.getMonth() + 3) / 3), //季度
+                "S": this.getMilliseconds() //毫秒
+            };
+            if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+            for (var k in o)
+                if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+            return fmt;
+        }
+
+        //处理后台传过来的时间
+        function getTime() {
+            var ts = arguments[0] || 0;   //在函数中引用函数的参数
+            var t, y, m, d, h, i, s;
+            t = ts ? new Date(ts * 1000) : new Date();
+            y = t.getFullYear();
+            m = t.getMonth() + 1;
+            d = t.getDate();
+            h = t.getHours();
+            i = t.getMinutes();
+            s = t.getSeconds();
+            // 可根据需要在这里定义时间格式
+            return y + '-' + (m < 10 ? '0' + m : m) + '-' + (d < 10 ? '0' + d : d) + ' ' + (h < 10 ? '0' + h : h) + ':' + (i < 10 ? '0' + i : i) + ':' + (s < 10 ? '0' + s : s);
+        }
+    
+    </script>
+
+</head>
+
+<body class="easyui-layout">
+    <!-- begin of header -->
+    <!--小人只在首页显示 start*-->
+
+    <div id="spig" class="spig">
+        <div id="message">正在加载中……</div>
+        <div id="mumu" class="mumu"></div>
+    </div>
+    <!--小人end*-->
+    <div class="wu-header" data-options="region:'north',border:false,split:true">
+        <div class="wu-header-left">
+            <h1>后台管理</h1>
+        </div>
+        <div class="wu-header-right">
+            <p><strong class="easyui-tooltip" title="2条未读消息" id="strName">@Model.U_RealName，你好啊</strong></p>
+            <p><a href="#" id="updatePersonal">修改个人资料</a>|<a href="#" id="updatePassword">修改密码</a>|<a href="#" id="logOut">退出登录</a></p>
+        </div>
+    </div>
+    <!-- end of header -->
+    <!-- begin of sidebar -->
+    <div class="wu-sidebar" data-options="region:'west',split:true,border:true,title:'导航菜单'">
+        <div class="easyui-accordion" data-options="border:false,fit:true">
+            @if (Model.U_Role == 1)
+            {
+                <div title="系统管理" data-options="iconCls:'icon-application-cascade'" style="padding:5px;">
+                    <ul class="easyui-tree wu-side-tree">
+                        <li iconCls="icon-users"><a href="javascript:void(0)" data-icon="icon-users" iframe="0" data-link="/ShopGl/ShopG">店铺管理</a></li>
+                        <li iconCls="icon-users"><a href="javascript:void(0)" data-icon="icon-users" iframe="0" data-link="/MemberGrade/PageMemberGrade">会员等级管理</a></li>
+                    </ul>
+                </div>
+            }
+            @if (Model.U_Role == 2)
+            {
+                <div title="用户管理" data-options="iconCls:'icon-cart'" style="padding:5px;">
+                    <ul class="easyui-tree wu-side-tree">
+
+                        <li iconCls="icon-chart-organisation"><a data-icon="icon-chart-organisation" iframe="0" id="userMS" data-link="/UserGl/UserG">用户管理</a></li>
+                    </ul>
+                </div>
+                <div title="礼品管理" data-options="iconCls:'icon-application-form-edit'" style="padding:5px;">
+                    <ul class="easyui-tree wu-side-tree">
+                        <li iconCls="icon-chart-organisation"><a data-icon="icon-chart-organisation" data-link="/GiftsGl/GiftsGl" iframe="0">礼品列表</a></li>
+                    </ul>
+                </div>
+                <div title="会员管理" data-options="iconCls:'icon-creditcards'" style="padding:5px;">
+                    <ul class="easyui-tree wu-side-tree">
+                        <li iconCls="icon-chart-organisation"><a href="javascript:void(0)" data-icon="icon-chart-organisation" iframe="0" data-link="/MemberManagement/MemberManagementPage">会员列表</a></li>
+                    </ul>
+                </div>
+
+                <div title="会员消费" data-options="iconCls:'icon-bricks'" style="padding:5px;">
+                    <ul class="easyui-tree wu-side-tree">
+                        <li iconCls="icon-chart-organisation"><a href="javascript:void(0)" data-icon="icon-chart-organisation" iframe="0" data-link="/VipConsume/FastConsumePage">快速消费</a></li>
+                        <li iconCls="icon-users"><a href="javascript:void(0)" data-icon="icon-users" iframe="0" data-link="/VipConsume/SubtractPointPage">会员减积分</a></li>
+                        <li iconCls="icon-user-group"><a href="javascript:void(0)" data-icon="icon-user-group" iframe="0" data-link="/VipConsume/ConsumeHistoryPage">消费历史记录</a></li>
+                    </ul>
+                </div>
+                <div title="积分兑换" data-options="iconCls:'icon-chart-curve'" style="padding:5px;">
+                    <ul class="easyui-tree wu-side-tree">
+                        <li iconCls="icon-chart-organisation"><a href="javascript:void(0)" data-icon="icon-chart-organisation" iframe="0" data-link="/JfDh/JfDh">积分兑换礼品</a></li>
+                        <li iconCls="icon-chart-organisation"><a href="javascript:void(0)" data-icon="icon-chart-organisation" iframe="0" data-link="/JfDh/Jffx">积分返现</a></li>
+                        <li iconCls="icon-chart-organisation"><a href="javascript:void(0)" data-icon="icon-chart-organisation" iframe="0" data-link="/JfDh/JfDhcx">兑换查询</a></li>
+                    </ul>
+                </div>
+                <div title="统计中心" data-options="iconCls:'icon-wrench'" style="padding:5px;">
+                    <ul class="easyui-tree wu-side-tree">
+                        <li iconCls="icon-chart-organisation"><a href="javascript:void(0)" data-icon="icon-chart-organisation" data-link="/StatisticalCenter/QuickConsumeSC" iframe="0">快速消费统计</a></li>
+                        <li iconCls="icon-chart-organisation"><a href="javascript:void(0)" data-icon="icon-users" data-link="/StatisticalCenter/MemberConsumeSC" iframe="0">会员消费情况统计</a></li>
+                        <li iconCls="icon-chart-organisation"><a href="javascript:void(0)" data-icon="icon-user-group" data-link="/StatisticalCenter/MemberSIntegralSC" iframe="0">减积分统计</a></li>
+                        <li iconCls="icon-chart-organisation"><a href="javascript:void(0)" data-icon="icon-book" data-link="/StatisticalCenter/IntegralReturnSC" iframe="0">积分返现统计</a></li>
+                        <li iconCls="icon-chart-organisation"><a href="javascript:void(0)" data-icon="icon-cog" data-link="/StatisticalCenter/GiftsExchangeSC" iframe="0">礼品兑换统计</a></li>
+
+                    </ul>
+                </div>
+            }
+
+        </div>
+    </div>
+    <!-- end of sidebar -->
+    <!-- begin of main -->
+
+
+    <div class="wu-main" data-options="region:'center'">
+        <div id="wu-tabs" class="easyui-tabs" data-options="border:false,fit:true">
+
+        </div>
+    </div>
+    <div id="divShow"></div>
+    <!-- end of main -->
+    <!-- begin of footer -->
+    <div class="wu-footer" data-options="region:'south',border:true,split:true">
+        &copy; 2018 Wu All Rights Reserved
+    </div>
+    <!-- end of footer -->
+    <script type="text/javascript">
+        $(function () {
+            $('.wu-side-tree a').bind("click", function () {
+                var title = $(this).text();
+                var url = $(this).attr('data-link');
+                var iconCls = $(this).attr('data-icon');
+                var iframe = $(this).attr('iframe') == 1 ? true : false;
+                addTab(title, url, iconCls, iframe);
+            });
+        })
+
+        /**
+        * Name 载入树形菜单
+        */
+        $('#wu-side-tree').tree({
+            url: 'temp/menu.php',
+            cache: false,
+            onClick: function (node) {
+                var url = node.attributes['url'];
+                if (url == null || url == "") {
+                    return false;
+                }
+                else {
+                    addTab(node.text, url, '', node.attributes['iframe']);
+                }
+            }
+        });
+
+        /**
+        * Name 选项卡初始化
+        */
+        $('#wu-tabs').tabs({
+            tools: [{
+                iconCls: 'icon-reload',
+                border: false,
+                handler: function () {
+                    $('#wu-datagrid').datagrid('reload');
+                }
+            }]
+        });
+
+        /**
+        * Name 添加菜单选项
+        * Param title 名称
+        * Param href 链接
+        * Param iconCls 图标样式
+        * Param iframe 链接跳转方式（true为iframe，false为href）
+        */
+        function addTab(title, href, iconCls, iframe) {
+            var tabPanel = $('#wu-tabs');
+            if (!tabPanel.tabs('exists', title)) {
+                var content = '<iframe scrolling="auto" frameborder="0"  src="' + href + '" style="width:100%;height:100%;"></iframe>';
+                if (iframe) {
+                    tabPanel.tabs('add', {
+                        title: title,
+                        content: content,
+                        iconCls: iconCls,
+                        fit: true,
+                        cls: 'pd3',
+                        closable: true
+                    });
+                }
+                else {
+                    tabPanel.tabs('add', {
+                        title: title,
+                        href: href,
+                        iconCls: iconCls,
+                        fit: true,
+                        cls: 'pd3',
+                        closable: true
+                    });
+                }
+            }
+            else {
+                tabPanel.tabs('select', title);
+            }
+        }
+        /**
+        * Name 移除菜单选项
+        */
+        function removeTab() {
+            var tabPanel = $('#wu-tabs');
+            var tab = tabPanel.tabs('getSelected');
+            if (tab) {
+                var index = tabPanel.tabs('getTabIndex', tab);
+                tabPanel.tabs('close', index);
+            }
+        }
+    </script>
+
+</body>
+</html>
+

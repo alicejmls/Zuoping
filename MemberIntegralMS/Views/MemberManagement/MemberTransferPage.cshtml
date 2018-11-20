@@ -1,0 +1,149 @@
+﻿
+
+@{
+    Layout = null;
+}
+
+
+
+<script>
+    $(function () {
+
+        var row = $("#TbVipInfo").datagrid('getSelected');
+
+        $("#lblRollCardID").text(row.MC_CardID);
+        $("#lblRollName").text(row.MC_Name);
+        $("#lblRollMC_Point").text(row.MC_Point);
+        $("#lblRollMC_TotalMoney").text(row.MC_TotalMoney);
+
+        $("#btnTransQuery").click(function () {
+            var mcId = $("#txtReportMC_CardID").val();
+            if (mcId == "") {
+                $("#lblErr").text("* 会员卡号不能为空");
+                return;
+            }
+            if (mcId == $("#lblRollCardID").text()) {
+                $("#lblErr").text("* 卡号不能为自己");
+                return;
+            }
+            $.getJSON("/MemberManagement/QueryVipIsNull", { cardNumber: mcId }, function (d) {
+                if (d.pd) {
+                    $("#lblErr").text("");
+                    $("#lblShiftMC_ID").text(d.MC_ID);
+                    $("#lblShiftCardID").text(d.MC_CardID);
+                    $("#lblShiftName").text(d.MC_Name);
+                    $("#lblShiftMC_Point").text(d.MC_Point);
+                    $("#lblShiftMC_TotalMoney").text(d.MC_TotalMoney);
+                }
+                else {
+                    $("#lblErr").text("* 会员卡号不存在");
+                    return;
+                }
+            })
+        })
+
+        var b = 0;
+        $("#txtTransMoneys").blur(function () {
+           
+            if ($("#txtTransMoneys").val() == "") {
+                $("#lblTransMoney").text("* 必填");
+                return;
+            }
+            if (isNaN(parseInt($("#txtTransMoneys").val()))) {
+                $("#lblTransMoney").text("* 只能是数字");
+                return;
+            }
+            b = 1;
+            $("#lblTransMoney").text("");
+        })
+        //转账
+        $("#btnTransUpdate").click(function () {
+            $("#btnTransQuery").click();
+            $("#txtTransMoneys").blur();
+            if (b < 1) {
+                return;
+            }
+            var data = {
+                RollMC_ID: row.MC_ID,
+                RollCardID: $("#lblRollCardID").text(),
+                RollMC_TotalMoney: parseFloat($("#txtTransMoneys").val()),
+                ShiftMC_ID: parseInt($("#lblShiftMC_ID").text()),
+                ShiftCardID: $("#lblShiftCardID").text(),
+                TL_TransferMoney: parseFloat($("#txtTransMoneys").val()),
+                TL_Remark: $("#txtTransRemak").val(),
+                TL_CreateTime: new Date().Format("yyyy-MM-dd HH:mm:ss")
+            }
+
+            $.getJSON("/MemberManagement/MemberTransfer", data, function (d) {
+                alert(d ? "转账成功" : "账户余额不足，转账失败！");
+                $("#VipUpOrAddFrom").dialog("close");
+                $("#TbVipInfo").datagrid("reload");
+            })
+
+        })
+
+        //取消
+        $("#btnTransCancel").click(function () {
+            $("#VipUpOrAddFrom").dialog("close");
+        })
+    })
+</script>
+<br />
+<h3>转出会员</h3>
+<table>
+    <tr>
+        <td>卡号：</td>
+        <td><label id="lblRollCardID"></label></td>
+        <td>姓名：</td>
+        <td><label id="lblRollName"></label></td>
+    </tr>
+    <tr>
+        <td>账户积分：</td>
+        <td><label id="lblRollMC_Point"></label></td>
+        <td>累计消费：</td>
+        <td><label id="lblRollMC_TotalMoney"></label></td>
+    </tr>
+</table>
+<br />
+<br />
+点击查找获取当前输入会员信息
+<br />
+<input id="txtReportMC_CardID" style="width:150px;">
+<a id="btnTransQuery" class="easyui-linkbutton" data-options="iconCls:'icon-search'">查找</a><br />
+<label id="lblErr" style="color:red"></label><br />
+<h3>转入会员</h3>
+<label id="lblShiftMC_ID" hidden="hidden"></label>
+<table>
+    <tr>
+        <td>卡号：</td>
+        <td><label id="lblShiftCardID"></label></td>
+        <td>姓名：</td>
+        <td><label id="lblShiftName"></label></td>
+    </tr>
+    <tr>
+        <td>账户积分：</td>
+        <td><label id="lblShiftMC_Point"></label></td>
+        <td>累计消费：</td>
+        <td><label id="lblShiftMC_TotalMoney"></label></td>
+    </tr>
+</table>
+<br />
+
+<table>
+    <tr>
+        <td>转账金额：</td>
+        <td><input style="width:150px" id="txtTransMoneys" /></td>
+    </tr>
+    <tr><td colspan="2"><span style="margin-left:35%"><label id="lblTransMoney" style="color:red;"></label></span></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>操作备注：</td>
+        <td><input style="width:150px" id="txtTransRemak" /></td>
+    </tr>
+    <tr>
+        <td height="50px"><a id="btnTransUpdate" class="easyui-linkbutton" data-options="iconCls:'icon-ok'">转账</a></td>
+        <td height="50px"><a id="btnTransCancel" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'">取消</a></td>
+    </tr>
+</table>
+

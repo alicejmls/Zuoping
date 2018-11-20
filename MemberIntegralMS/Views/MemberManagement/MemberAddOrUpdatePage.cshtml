@@ -1,0 +1,312 @@
+﻿
+@{
+    Layout = null;
+}
+@model MemberIntegralMS.Users
+<br />
+
+
+<div>
+    <br />
+    <form>
+        <table>
+            <tr>
+                <td>会员卡号：</td>
+                <td colspan="3"><input id="txtMbVipCardNumber" style="width:150px"><label id="lblMbVipCardNumber" style="color:red"></label></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>会员姓名：</td>
+                <td><input id="txtMbVipName" style="width:150px" /><label id="lblMbVipName" style="color:red"></label></td>
+                <td>手机号码：</td>
+                <td><input id="txtMbVipTel" style="width:150px"></td>
+            </tr>
+            <tr>
+                <td>卡片密码：</td>
+                <td><input id="txtMbCardPwd" style="width:150px" type="password"><label id="lblMbCardPwd" style="color:red" ></label></td>
+                <td>确认密码：</td>
+                <td><input id="txtMbOkCardPwd" style="width:150px" type="password"><label id="lblOkCardPwd" style="color:red"></label></td>
+            </tr>
+            <tr>
+                <td>会员性别：</td>
+                <td>
+                    <select id="txtMbVipSex">
+                        <option value="2">未知</option>
+                        <option value="1">男</option>
+                        <option value="0">女</option>
+                    </select>
+                </td>
+                <td>会员等级：</td>
+                <td><input id="txtMbVipGrade" style="width:150px"></td>
+            </tr>
+            <tr>
+                <td>会员生日：</td>
+                <td>
+                    <input name="vipBirthday" id="vipBirthdayGL" type="radio" value="1" checked="checked" style="padding-left:20px">公历
+                    <input name="vipBirthday" id="vipBirthdayNl" type="radio" value="0" style="padding-left:20px">农历
+                </td>
+                <td colspan="2">
+                    <select id="sltVipBirthdayMonth" style="width:110px"></select>月
+                    <select id="sltVipBirthdayDay" style="width:110px"></select>日
+                </td>
+                <td></td>
+            </tr>
+            <tr>
+                <td colspan="2"><input name="IsPast" id="chkIsPast" type="checkbox" value="1">设置卡片到期时间(到期则此卡自动失效)</td>
+                <td></td>
+                <td><input id="txtPastTime" style="width:150px" class="easyui-datebox" ></td>
+                <td></td>--
+            </tr>
+            <tr>
+                <td>卡片状态：</td>
+                <td><input id="txtCardState" style="width:150px"></td>
+                <td>卡片付费：</td>
+                <td><input id="txtMoney" style="width:150px"></td>
+            </tr>
+            <tr>
+                <td>积分数量：</td>
+                <td><input id="txtPoint" style="width:150px"></td>
+                <td colspan="2"><input name="IsPointAuto" id="chkIsPointAuto" type="checkbox" value="1">积分是否可以自动转换为等级？</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>推荐人卡号：</td>
+                <td><input id="txtRefererCard" style="width:150px"></td>
+                <td>推荐人姓名：</td>
+                <td><input id="txtRefererName" style="width:150px"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>
+                    <a id="btnMbAddOrUpdate" class="easyui-linkbutton" data-options="iconCls:'icon-ok'">确定</a>
+
+                </td>
+                <td><a id="btnMbCancel" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'">取消</a></td>
+                <td></td>
+            </tr>
+        </table>
+    </form>
+</div>
+<script>
+        $(function () {
+            var row = $("#TbVipInfo").datagrid('getSelected');
+            //文本框的合法性验证
+            var b1 = 0;
+            var b2 = 0;
+            var b3 = 0;
+            var b4 = 0;
+            $("#txtMbVipCardNumber").blur(function () {
+                if ($("#txtMbVipCardNumber").val() == "") {
+                    $("#lblMbVipCardNumber").text("* 必填");
+                    return;
+                }
+                if (row != null) {
+                    $.getJSON("/MemberManagement/QueryVipCardNumber", { MC_ID: parseInt(row.MC_ID), cardNumber: $("#txtMbVipCardNumber").val() }, function (d) {
+                        if (d) {
+                            $("#lblMbVipCardNumber").text("* 已存在的会员卡号");
+                            return;
+                        } else {
+                            b1 = 1;
+                            $("#lblMbVipCardNumber").text("");
+
+                        }
+                    })
+                }
+                else {
+                    $.getJSON("/MemberManagement/QueryVipCardNumber", { MC_ID: 0, cardNumber: $("#txtMbVipCardNumber").val() }, function (d) {
+                        if (d) {
+                            $("#lblMbVipCardNumber").text("* 已存在的会员卡号");
+                            return;
+                        } else {
+                            b1 = 1;
+                            $("#lblMbVipCardNumber").text("");
+
+                        }
+                    })
+                }
+
+            })
+
+            $("#txtMbVipName").blur(function () {
+                if ($("#txtMbVipName").val() == "") {
+                    $("#lblMbVipName").text("* 必填");
+                    return;
+                }
+                b2 = 1;
+                $("#lblMbVipName").text("");
+            })
+
+            $("#txtMbCardPwd").blur(function () {
+                if ($("#txtMbCardPwd").val() == "") {
+                    $("#lblMbCardPwd").text("* 必填");
+                    return;
+                }
+                if ($("#txtMbCardPwd").val() != $("#txtMbOkCardPwd").val()) {
+                    $("#lblMbCardPwd").text("* 请确认密码");
+                    return;
+                }
+                b3 = 1;
+                $("#lblMbCardPwd").text("");
+                $("#lblOkCardPwd").text("");
+            })
+
+            $("#txtMbOkCardPwd").blur(function () {
+                if ($("#txtMbOkCardPwd").val() == "") {
+                    $("#lblOkCardPwd").text("* 必填");
+                    return;
+                }
+                if ($("#txtMbCardPwd").val() != $("#txtMbOkCardPwd").val()) {
+                    $("#lblOkCardPwd").text("* 两次密码不一致");
+                    return;
+                }
+                b4 = 1;
+                $("#lblOkCardPwd").text("");
+                $("#lblMbCardPwd").text("");
+            })
+
+
+            //绑定会员等级
+            $("#txtMbVipGrade").combobox({
+                url: '/MemberManagement/GetVipGrade',
+                valueField: "CL_ID",
+                textField: "CL_LevelName"
+
+            });
+            $('#txtMbVipGrade').combobox('setValue', '1');
+
+            //绑定会员卡状态
+            $("#txtCardState").combobox({
+                url: '/MemberManagement/GetState',
+                valueField: "MC_State",
+                textField: "CI_Name"
+
+            });
+            $('#txtCardState').combobox('setValue', '1');
+
+            //绑定月
+            for (var i = 1; i <= 12; i++) {
+                $("#sltVipBirthdayMonth").append("<option value='" + i + "'>" + i + "</option>");
+            }
+            //默认日
+            for (var i = 1; i <= 31; i++) {
+                $("#sltVipBirthdayDay").append("<option value='" + i + "'>" + i + "</option>");
+            }
+
+            //月和日联动
+            var days = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+            $("#sltVipBirthdayMonth").change(function () {
+                //绑定日
+                $("#sltVipBirthdayDay").html("");
+                var maxDay = days[parseInt($(this).val()) - 1];
+                for (var i = 1; i <= maxDay; i++) {
+                    $("#sltVipBirthdayDay").append("<option value='" + i + "'>" + i + "</option>");
+                }
+            })
+
+        if (row != null) {
+
+
+            $("#txtMbVipCardNumber").val(row.MC_CardID);
+            $("#txtMbVipName").val(row.MC_Name);
+            $("#txtMbVipTel").val(row.MC_Mobile);
+            $(":radio[name='vipBirthday']").each(function () {
+                if ($(this).val() == row.BirthdayType) {
+                    $(this).attr("checked", true);
+                }
+            });
+
+            $("#sltVipBirthdayMonth").val(row.MC_Birthday_Month);
+            $("#sltVipBirthdayDay").val(row.MC_Birthday_Day);
+            $("#chkIsPast").attr("checked", row.MC_IsPast);
+            var pa = /.*\((.*)\)/;   //获取    /Date(时间戳) 括号中的字符串时间戳 的正则表达式
+            var unixtime = row.MC_PastTime.match(pa)[1].substring(0, 10); //通过正则表达式来获取到时间戳的字符串
+            $("#txtPastTime").datebox("setValue",getTime(unixtime));
+            $("#txtPoint").val(row.MC_Point);
+            $("#txtMoney").val(row.MC_Money);
+            $("#txtCardState").val(row.MC_State);
+            $("#txtRefererCard").val(row.MC_RefererCard);
+            $("#txtRefererName").val(row.RefererName);
+            $("#txtMbVipSex").val(row.MC_Sex);
+            $("#chkIsPointAuto").attr("checked", row.MC_IsPointAuto);
+            $("#txtMbVipGrade").val(row.CL_ID);
+
+
+        }
+        $("#btnMbAddOrUpdate").mousedown(function () {
+            $("input").blur();
+
+            if ((b1 + b2 + b3 + b4) < 4) {
+                return;
+            }
+
+            if (row == null) {
+                var sj = {
+                    S_ID: parseInt(@Model.S_ID),
+                    MC_CardID: $("#txtMbVipCardNumber").val(),
+                    MC_Name: $("#txtMbVipName").val(),
+                    MC_Mobile: $("#txtMbVipTel").val(),
+                    MC_Password: $("#txtMbCardPwd").val(),
+                    MC_Birthday_Month: parseInt($("#sltVipBirthdayMonth").val()),
+                    MC_Birthday_Day: parseInt($("#sltVipBirthdayDay").val()),
+                    MC_BirthdayType: parseInt($(":radio[name='vipBirthday']:checked").val()),
+                    MC_IsPast: $("#chkIsPast").is("checked") ? 1:0 ,
+                    MC_PastTime: $("#txtPastTime").datebox("getValue") == "" ? "null" : $("#txtPastTime").datebox("getValue"),
+                    MC_Point: isNaN(parseInt($("#txtPoint").val())) ? 0 : parseInt($("#txtPoint").val()),
+                    MC_Money: parseFloat($("#txtMoney").val()),
+                    MC_RefererCard: $("#txtRefererCard").val(),
+                    MC_RefererName: $("#txtRefererName").val(),
+                    MC_Sex: parseInt($("#txtMbVipSex").val()),
+                    MC_IsPointAuto: $("#chkIsPointAuto").is("checked") ? 1 : 0,
+                    CL_ID: parseInt($("#txtMbVipGrade").combobox("getValue", "CL_ID")),
+                    MC_State: parseInt($("#txtCardState").combobox("getValue", "MC_State")),
+                    MC_CreateTime: new Date().Format("yyyy-MM-dd HH:mm:ss")
+                }
+                $.getJSON("/MemberManagement/MemberAddOrUpdate", sj, function (e) {
+                    alert(e ? "添加成功" : "系统异常添加失败！");
+                    $("#VipUpOrAddFrom").dialog("close");
+                    $("#TbVipInfo").datagrid("reload");
+                    return;
+                }
+                )
+            }
+            else {
+
+                var sj = {
+                    MC_ID: parseInt(row.MC_ID),
+                    MC_CardID: $("#txtMbVipCardNumber").val(),
+                    MC_Name: $("#txtMbVipName").val(),
+                    MC_Mobile: $("#txtMbVipTel").val(),
+                    MC_Password: $("#txtMbCardPwd").val(),
+                    MC_Birthday_Month: parseInt($("#sltVipBirthdayMonth").val()),
+                    MC_Birthday_Day: parseInt($("#sltVipBirthdayDay").val()),
+                    MC_BirthdayType: parseInt($(":radio[name='vipBirthday']:checked").val()),
+                    MC_IsPast: $("#chkIsPast").is("checked") ? 1 : 0,
+                    MC_PastTime: $("#txtPastTime").datebox("getValue") == "" ? "null" : $("#txtPastTime").datebox("getValue"),
+                    MC_Point: $("#txtPoint").val(),
+                    MC_Money: parseFloat($("#txtMoney").val()),
+                    MC_RefererCard: $("#txtRefererCard").val(),
+                    MC_RefererName: $("#txtRefererName").val(),
+                    MC_Sex: parseInt($("#txtMbVipSex").val()),
+                    MC_IsPointAuto: $("#chkIsPointAuto").is("checked") ? 1 : 0,
+                    CL_ID: parseInt($("#txtMbVipGrade").combobox("getValue", "CL_ID")),
+                    MC_State: parseInt($("#txtCardState").combobox("getValue", "MC_State"))
+                }
+                $.getJSON("/MemberManagement/MemberAddOrUpdate", sj, function (e) {
+                    alert(e ? "修改成功" : "系统异常修改失败！");
+
+                    $("#VipUpOrAddFrom").dialog("close");
+                    $("#TbVipInfo").datagrid("reload");
+                    return;
+                }
+                )
+            }
+        })
+        $("#btnMbCancel").click(function () {
+            $("#VipUpOrAddFrom").dialog("close");
+        })
+
+        })
+
+       
+    </script>

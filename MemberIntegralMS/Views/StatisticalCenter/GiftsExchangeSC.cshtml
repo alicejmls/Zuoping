@@ -1,0 +1,48 @@
+﻿
+@{
+    Layout = null;
+}
+
+
+
+    <script>
+        $(function () {
+            $("#giftsExchangeTab").datagrid({
+                url: '/StatisticalCenter/GetgiftsExchangeTab',
+                columns: [[
+                    { field: "EL_ID", title: "", width: 40 },
+                    { field: "MC_CardID", title: "会员卡号", width: 120 },
+                    { field: "MC_Name", title: "会员姓名", width: 120 },
+                    { field: "EG_ID", title: "礼品编号", width: 120 },
+                    { field: "EG_GiftName", title: "礼品名称", width: 120 },
+                    { field: "EL_Point", title: "所需积分", width: 120 },
+                    { field: "EL_Number", title: "数量", width: 120 },
+                    {
+                        field: "EL_CreateTime", title: "兑换时间", width: 200,
+                        formatter: function (value, rec) {
+                            return new Date(parseInt(value.substr(6, 13))).toLocaleDateString();
+                        }
+                    },
+                ]],
+                pagination: true,
+                pageSize: 5,
+                pageList: [5, 10, 15],
+            });
+
+            $("#btnCx4").click(function () {
+                $("#giftsExchangeTab").datagrid("reload", { sTime: $("#txtSTime4").datebox('getValue'), eTime: $("#txtETime4").datebox('getValue'), cardId: $("#txtCardId4").val() });
+            })
+
+        })
+    </script>
+
+    <fieldset>
+        <legend><b>查询</b></legend>
+        卡号/手机： <input id="txtCardId4" type="text" />
+        兑换日期：  <input id="txtSTime4" type="text" class="easyui-datebox" required="required">
+        至<input id="txtETime4" type="text" class="easyui-datebox" required="required">
+        <input id="btnCx4" class="btn" type="button" value="查询" />
+    </fieldset>
+    <br />
+    <table id="giftsExchangeTab"></table>
+

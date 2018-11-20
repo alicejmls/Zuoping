@@ -1,0 +1,174 @@
+﻿@{
+    Layout = null;
+}
+
+
+
+
+<br />
+
+<br />
+<h3>查找会员</h3>
+<hr />
+<table>
+    <tr>
+        <td>卡号/手机：</td>
+        <td><input style="width:150px" id="txtMC_CardIDOrMC_Mobile" />&nbsp;<a id="btnConsumeQuery" class="easyui-linkbutton" data-options="iconCls:'icon-search'">查找</a><label id="lblMC_CardIDOrMC_Mobile" style="color:red"></label></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>会员姓名：</td>
+        <td><label id="lblCsmMC_Name"></label></td>
+        <td>当前等级：</td>
+        <td><label id="lblCsmCL_ID"></label></td>
+    </tr>
+    <tr>
+        <td>当前积分：</td>
+        <td><label id="lblCsmMC_Point"></label></td>
+        <td>累计消费：</td>
+        <td><label id="lblCsmMC_TotalMoney">￥</label></td>
+    </tr>
+</table>
+
+<label id="lblMC_ID" hidden="hidden"></label>
+<label id="lblCsmCL_Point" hidden="hidden"></label>
+<label id="lblMC_CardID" hidden="hidden"></label>
+<hr />
+<h3>积分返现</h3>
+<hr />
+<table>
+    <tr>
+        <td>兑换日期：</td>
+        <td><input style="width:150px" id="lblCsmTime" readonly="readonly" /></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>兑换积分：</td>
+        <td><input style="width:150px" id="txtCsmMoneys" readonly="readonly" /></td>
+        <td>积分返现：</td>
+        <td><input style="width:150px" id="txtPointNum" readonly="readonly" /></td>
+    </tr>
+    <tr>
+        
+        <td>剩余积分：</td>
+        <td><input style="width:150px" id="txtsyujf" readonly="readonly" /></td>
+        <td></td>
+        <td></td>
+    </tr>
+</table>
+<br />
+
+<a id="btnCsmUpdate" class="easyui-linkbutton" data-options="iconCls:'icon-ok'">马上返现</a>
+<script>
+   
+    $(function () {
+
+        $("#lblCsmTime").val(new Date().Format("yyyy-MM-dd"));
+
+        $("#btnConsumeQuery").click(function () {
+
+            if ($("#txtMC_CardIDOrMC_Mobile").val() == "") {
+                alert("请先输入查询的卡号、手机号");
+                return;
+            }
+
+            $.ajax({
+                async: false,
+                url: "/VipConsume/QueryVipIdOrTel",
+                data: { MC_CardID: $("#txtMC_CardIDOrMC_Mobile").val(), MC_Mobile: $("#txtMC_CardIDOrMC_Mobile").val() },
+                type: "get",
+                dataType: "json",
+                success: function (d) {
+                    if (d.pd == "-1") {
+                        alert("手机号有重复的，请检查数据库数据是否合法");
+                        return;
+                    }
+                    else if (d.pd == "0") {
+                        alert("* 卡号或手机号不存在");
+                        return;
+                    }
+                    else if (d.pd == "1") {
+                       
+                        $("#lblCsmMC_Name").text(d.mc[0].MC_Name);
+                        $("#lblCsmMC_Point").text(d.mc[0].MC_Point);
+                        $("#lblCsmCL_ID").text(d.mc[0].CL_LevelName + "(折扣比例：" + d.mc[0].CL_Percent + ")");
+                        $("#lblCsmMC_TotalMoney").text("￥" + d.mc[0].MC_TotalMoney);
+                        $("#lblCsmCL_Point").text(d.mc[0].CL_Point);
+                        $("#lblMC_ID").text(d.mc[0].MC_ID);
+                        $("#lblMC_CardID").text(d.mc[0].MC_CardID);
+                        $("#txtCsmMoneys").attr("readonly", false);
+                    }
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    alert("错误信息：" + XMLHttpRequest.responseText);
+                }
+            })
+        })
+        var b = 0;
+        $("#txtCsmMoneys").blur(function () {
+            b = 0;
+            if ($("#txtCsmMoneys").attr("readonly") == "readonly") {
+                return;
+            }
+            if ($("#lblCsmCL_ID").text() == "") {
+                alert("请先查询用户！");
+                return;
+            }
+            if ($("#txtCsmMoneys").val() == "") {
+                alert("兑换积分必填");
+                return;
+            }
+            var res = /^[0-9]*$/;
+            if (!res.test($("#txtCsmMoneys").val())) {
+                alert("兑换积分只能是数字");
+
+                return;
+            }
+            if (parseInt($("#lblCsmMC_Point").text()) < parseInt($("#txtCsmMoneys").val())) {
+                alert("积分不足！");
+                return;
+            }
+            if (parseInt($("#txtCsmMoneys").val())< parseInt($("#lblCsmCL_Point").text())) {
+                alert("最少兑换积分" + parseInt($("#lblCsmCL_Point").text()));
+                return;
+            }
+            b = 1;
+            $("#txtPointNum").val("" + parseInt((parseFloat($("#txtCsmMoneys").val())) / (parseFloat($("#lblCsmCL_Point").text()))));
+            $("#txtsyujf").val(parseInt($("#lblCsmMC_Point").text()) - parseInt($("#txtCsmMoneys").val()));
+        })
+        //结算
+        $("#btnCsmUpdate").click(function () {
+            if ($("#lblCsmCL_ID").text() == "") {
+                alert("请先查询用户！");
+                return;
+            }
+            if ($("#txtCsmMoneys").val() == "") {
+                alert("兑换积分必填");
+                return;
+            }
+            if (b < 1) {
+                alert("请输入正确的兑换积分！");
+                $("#txtCsmMoneys").focus();
+                return;
+            }
+          
+            var data = {
+                
+                MC_ID: parseInt($("#lblMC_ID").text()),
+                MC_CardID: $("#lblMC_CardID").text(),
+                CO_Recash: parseFloat($("#txtPointNum").val()),
+                CO_GavePoint: parseInt($("#txtCsmMoneys").val())
+            }
+
+            $.getJSON("/JfDh/DoJffx", data, function (d) {
+                if (d) {
+                    alert("返现成功！");
+                    $("#btnConsumeQuery").click();
+                }
+
+            })
+        })
+    })
+</script>

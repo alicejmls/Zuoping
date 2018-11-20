@@ -1,0 +1,134 @@
+﻿
+@{
+    Layout = null;
+}
+
+@model MemberIntegralMS.Users
+
+<div>
+    <br />
+    <form>
+        <table id="Addsjj">
+            <tr>
+                <td>登录名：</td>
+                <td><input name="U_LoginName" id="U_LoginName" style="width:200px"></td>
+            </tr>
+            <tr>
+                <td>真实姓名：</td>
+                <td><input name="U_RealName" id="U_RealName"/></td>
+            </tr>
+            <tr>
+                <td>性别：</td>
+                <td>
+                    <input name="U_Sex" id="txtS_NameFs" checked="checked"  type="radio" value="男">男
+                    <input name="U_Sex" id="txtS_NameMs" type="radio" value="女">女
+                </td>
+            </tr>
+            <tr>
+                <td>联系电话：</td>
+                <td><input name="U_Telephone" id="U_Telephone" style="width:200px"></td>
+            </tr>
+            <tr>
+                <td>角色：</td>
+                <td><input name="U_Role"   id="U_Role" ></td>
+            </tr>
+            <tr>
+                <td>是否可以删除：</td>
+                <td><input name="U_CanDelete" id="U_CanDelete" type="checkbox" value="是">是</td>
+            </tr>
+            <tr style="height:10px"></tr>
+            <tr>
+                <td></td>
+                <td><a id="btnTcAddOrUpdate" class="easyui-linkbutton" data-options="iconCls:'icon-ok'">确定</a> 
+                <a id="btnTcCancel" class="easyui-linkbutton"  data-options="iconCls:'icon-cancel'">取消</a></td>
+            </tr>
+        </table>
+    </form>
+</div>
+<script>
+    $(function () {
+            //角色
+            $('#U_Role').combobox({
+                url: '/UserGl/GetU_Role',
+                valueField: "CI_ID",
+                textField: "CI_Name",
+                loadFilter: function (data) {  //过滤后台返回的数据并显示
+                    var obj = { CI_ID: "0", CI_Name: "---请选择---" };
+                    data.splice(0, 0, obj)//在数组0位置插入obj,不删除原来的元素
+                    return data;
+                }
+        });
+            $('#U_Role').combobox('setValue', '0');
+            var row = $("#TbCxSj").datagrid('getSelected');
+
+            if (row != null) {
+     
+                $("#U_LoginName").val(row.U_LoginName);
+                $("#U_RealName").val(row.U_RealName);
+                $("#U_Telephone").val(row.U_Telephone);
+                if (row.U_Sex == "女") {
+                    $("#txtS_NameMs").attr("checked", "checked");
+                }
+                if (row.U_CanDelete) {
+                    $("#U_CanDelete").attr("checked", "checked");
+                }
+                $("#U_Role").combobox('setValue', row.U_Role);
+            }
+          $("#btnTcAddOrUpdate").click(function () {
+            if ($("#U_Role").combobox('getValue') == "0") {
+                alert("请选择角色！");
+                return;
+            }
+
+            if (row == null) {
+                var sj = {
+                    U_LoginName: $("#U_LoginName").val(),
+                    U_RealName: $("#U_RealName").val(),
+                    U_Telephone: $("#U_Telephone").val(),
+                    U_Sex: $("#txtS_NameFs").is(":checked") ? "男" : "女",
+                    U_CanDelete: $("#U_CanDelete").is(":checked"),
+                    U_Role: $("#U_Role").combobox('getValue'),
+                    S_ID: parseInt("@Model.S_ID")
+                }
+                $.getJSON("/UserGl/DoAddOrUpdate", sj, function (e) {
+                    if (e == -1) {
+                        alert("用户名已存在！");
+                        return;
+                    }
+                    alert(e ? "添加成功" : "系统异常添加失败！");
+                    $("#UpOrAddFrom").dialog("close");
+                    $("#TbCxSj").datagrid("reload");
+                    return;
+                }
+                )
+            } else {
+            var sj = {
+                U_LoginName: $("#U_LoginName").val(),
+                U_RealName: $("#U_RealName").val(),
+                U_Telephone: $("#U_Telephone").val(),
+                U_Sex: $("#txtS_NameFs").is(":checked") ? "男" : "女",
+                U_CanDelete: $("#U_CanDelete").is(":checked"),
+                U_Role: $("#U_Role").combobox('getValue'),
+                U_ID: row.U_ID,
+                 S_ID: parseInt("@Model.S_ID")
+            }
+            $.getJSON("/UserGl/DoAddOrUpdate", sj, function (e) {
+                if (e==-1) {
+                    alert("您要修改的用户名已存在！");
+                    return;
+                }
+                    alert(e ? "修改成功" : "系统异常修改失败！");
+
+                $("#UpOrAddFrom").dialog("close");
+                $("#TbCxSj").datagrid("reload");
+                return;
+            }
+            )
+            }
+        })
+        $("#btnTcCancel").click(function () {
+            $("#UpOrAddFrom").dialog("close");
+        })
+
+    })
+</script>

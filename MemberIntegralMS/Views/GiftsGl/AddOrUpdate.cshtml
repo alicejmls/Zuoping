@@ -1,0 +1,212 @@
+﻿@{
+    Layout = null;
+}
+
+@model MemberIntegralMS.Users
+
+<div>
+    <br />
+
+    <table id="Addsjj">
+        <tr>
+            <td>礼品代号：</td>
+            <td><input name="EG_GiftCode" id="EG_GiftCode" style="width:200px"></td>
+        </tr>
+        <tr>
+            <td>礼品名称：</td>
+            <td><input name="EG_GiftName" id="EG_GiftName" style="width:200px"></td>
+        </tr>
+        <tr>
+            <td>礼品图片：</td>
+
+            <td><form id="UpEG_Photo"><input id="EG_Photo" name="photo" type="file" accept="gif|jpg|jpeg|png|bmp|pic" maxlength="1" /></form></td>
+        </tr>
+        <tr>
+            <td>图片预览：</td>
+            <td id="GifimgTd"><img id="img1" width="200" height="200" src="" alt="" /></td>
+        </tr>
+        <tr>
+            <td>所需积分：</td>
+            <td><input name="EG_Point" id="EG_Point" style="width:200px"></td>
+        </tr>
+        <tr>
+            <td>礼品数量：</td>
+            <td><input name="EG_Number" id="EG_Number" style="width:200px"></td>
+        </tr>
+        <tr>
+            <td>备注：</td>
+            <td><input name="EG_Remark" id="EG_Remark" style="width:200px"></td>
+        </tr>
+
+        <tr style="height:10px"></tr>
+        <tr>
+            <td></td>
+            <td>
+                <a id="btnTcAddOrUpdate" class="easyui-linkbutton" data-options="iconCls:'icon-ok'">确定</a>
+                <a id="btnTcCancel" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'">取消</a>
+            </td>
+        </tr>
+    </table>
+
+    <label id="lblImgSrc" hidden="hidden"></label>
+</div>
+<script>
+   
+    $("#EG_Photo").change(function () {
+        var row = $("#GifTbCxSj").datagrid('getSelected');
+        if (row != null) {
+            $("#GifimgTd").html("<img id='img1' width='200' height='200'  /><input type='button' onclick='restoreImg()' value='还原图片' />");
+        }
+
+
+        var fileType = $("#EG_Photo").val();
+
+        //判断后缀是不是需要的文件类型
+        if (fileType != null && fileType != "") {
+            var start = fileType.lastIndexOf(".") + 1;
+            var length = fileType.length;
+            var finalType = fileType.substring(start, length);
+            var hzm = ["gif", "jpg", "jpeg", "png", "bmp", "pic",];
+            if (hzm.indexOf(finalType) < 0) {
+                alert("请上传图片格式的文件");
+                $("#EG_Photo").val("");
+                $("#img1").attr("src", "");
+                return;
+            }
+            var file = this.files[0];
+            if (this.files && file) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    $("#img1").attr("src", e.target.result);
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+    })
+   
+    $(function () {
+        var row = $("#GifTbCxSj").datagrid('getSelected');
+        if (row != null) {
+            $("#EG_GiftCode").val(row.EG_GiftCode);
+            $("#EG_GiftName").val(row.EG_GiftName);
+            $("#EG_Point").val(row.EG_Point);
+            $("#EG_Number").val(row.EG_Number);
+            $("#EG_Remark").val(row.EG_Remark);
+            $("#img1").attr("src", "" + row.EG_Photo + "");
+            $("#lblImgSrc").text("" + row.EG_Photo + "");
+        }
+
+        $("#btnTcAddOrUpdate").click(function () {
+            if (row == null) {
+
+                var photo = new FormData($("#UpEG_Photo")[0]);
+
+                $.ajax({
+                    async: false,//要求同步 不是不需看你的需求
+                    url: "/GiftsGl/UPAddphoto",
+                    type: 'post',
+                    data: photo,
+                    processData: false,  //必须false才会避开jQuery对 formdata 的默认处理
+                    contentType: false,  //必须false才会自动加上正确的Content-Type
+                    success: function (result) {
+                        if (result != "失败") {
+                            var sj = {
+                                EG_GiftCode: $("#EG_GiftCode").val(),
+                                EG_GiftName: $("#EG_GiftName").val(),
+                                EG_Point: $("#EG_Point").val(),
+                                EG_Number: parseInt($("#EG_Number").val()),
+                                EG_Point: parseInt($("#EG_Point").val()),
+                                EG_Remark: $("#EG_Remark").val(),
+                                EG_ExchangNum: 0,
+                                S_ID: parseInt("@Model.S_ID"),
+                                EG_Photo: result
+                            }
+                             $.getJSON("/GiftsGl/DoAddOrUpdate", sj, function (e) {
+                                 if (e == -1) {
+                                     alert("商品名称或商品编号重复！");
+                                     return;
+                                 }
+                                 alert(e ? "添加成功" : "系统异常修改失败！");
+
+                                 $("#GifUpOrAddFrom").dialog("close");
+                                 $("#GifTbCxSj").datagrid("reload");
+                                 return;
+                             }
+                             )
+                        }
+                    }
+                })
+            } else {
+               
+                var fileName = $("#EG_Photo").val();
+                if (fileName == "" || fileName == null) {
+
+                    if (row.EG_Photo == null) {
+                        fileName = null;
+                    } else {
+                        fileName = "" + row.EG_Photo + "";
+                    }
+                    
+                    gifCommUpdate(row,fileName);
+                    return;
+                }
+
+                var photo = new FormData($("#UpEG_Photo")[0]);
+                $.ajax({
+                    async: false,//要求同步 不是不需看你的需求
+                    url: "/GiftsGl/UPAddphoto",
+                    type: 'post',
+                    data: photo,
+                    processData: false,  //必须false才会避开jQuery对 formdata 的默认处理
+                    contentType: false,  //必须false才会自动加上正确的Content-Type
+                    success: function (result) {
+                        if (result != "失败") {
+                            fileName = result;
+                            gifCommUpdate(row, fileName);
+                            return;
+                        }
+                    }
+                })
+            }
+        })
+            $("#btnTcCancel").click(function () {
+                $("#GifUpOrAddFrom").dialog("close");
+        })
+
+        
+
+    })
+
+    function gifCommUpdate(row,fileName) {
+        var sj = {
+            EG_GiftCode: $("#EG_GiftCode").val() == "" ? row.EG_GiftCode : $("#EG_GiftCode").val(),
+            EG_GiftName: $("#EG_GiftName").val() == "" ? row.EG_GiftName : $("#EG_GiftName").val(),
+            EG_Point: $("#EG_Point").val() == "" ? row.EG_Point : $("#EG_Point").val(),
+            EG_Number: parseInt(($("#EG_Number").val() == "" ? row.EG_Number : $("#EG_Number").val())) + row.EG_ExchangNum,
+            EG_Point: parseInt($("#EG_Point").val() == "" ? row.EG_Point : $("#EG_Point").val()),
+            EG_Remark: $("#EG_Remark").val() == "" ? row.EG_Remark : $("#EG_Remark").val(),
+            S_ID: row.S_ID,
+            EG_ID: row.EG_ID,
+            EG_photo: fileName
+        }
+        $.getJSON("/GiftsGl/DoAddOrUpdate", sj, function (e) {
+            if (e == -1) {
+                alert("商品名称或商品编号重复！");
+                return;
+            }
+            alert(e ? "修改成功" : "系统异常修改失败！");
+            $("#GifUpOrAddFrom").dialog("close");
+            $("#GifTbCxSj").datagrid("reload");
+            return;
+        })
+    }
+
+    //还原图片
+    function restoreImg() {
+       
+        var llbSrc = $("#lblImgSrc").text();
+
+        $("#img1").attr("src", llbSrc);
+        $("#EG_Photo").val("");
+    }
+</script>

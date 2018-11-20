@@ -1,0 +1,249 @@
+﻿@{
+    Layout = null;
+}
+
+<br />
+
+<style>
+    .cz {
+        width: 35%;
+    }
+</style>
+<div style="margin-left:10px;">
+    <div>
+        <h1>查找会员</h1>
+        <hr />
+        卡号/手机：<input id="txtCardID" type="text" />
+        <label id="lblErr" style="color:red"></label>
+        <a id="btnTransQuery" class="easyui-linkbutton" data-options="iconCls:'icon-search'">查询</a>
+        <table>
+            <tr>
+                <td>卡号：</td>
+                <td class="cz"><label id="lblShiftCardID"></label></td>
+                <td>姓名：</td>
+                <td class="cz"><label id="lblShiftName"></label></td>
+            </tr>
+            <tr>
+                <td>账户积分：</td>
+                <td><label id="lblShiftMC_Point"></label></td>
+                <td>累计消费：</td>
+                <td><label id="lblShiftMC_TotalMoney"></label><label>¥</label></td>
+            </tr>
+        </table>
+        <label id="labMC_ID" hidden="hidden"></label>
+    </div>
+    <hr />
+    <div id="JfDhTbCxSj"></div>
+    <hr />
+    <h3>小计：<label id="lblxf" style="font-size:14px">0￥</label></h3>
+    <label style="color:red;font-size:14px">单击“兑换数量”的单元格可以修改兑换数量。</label>
+    <br />
+    <a id="btnMsdh" class="easyui-linkbutton">马上兑换</a>
+</div>
+
+<script>
+    var anpd = true;
+  
+    var gwc = new Array();//购物车
+    var xf = 0;//消费
+            $('#wu-category-tree').tree({
+                url: 'temp/menu.php',
+                onClick: function (node) {
+                    showMyMessage(node.text,'red');
+                }
+            });
+            $(function () {
+                JfDh();
+                $(".chbox").click(function () {
+                    alert($(this).attr("id").Replace("Check", ""));
+                    return;
+                    if ($(this).is("checked")) {
+
+                        var xj=0
+                        var bj = $("#JfDhTbCxSj").datagrid('getRows')[parseInt($(this).attr("id").Replace("Check",""))];
+                        if (gwc.length==0) {
+
+                        }
+                    }
+                })
+            })
+            //兑换按钮
+            $("#btnMsdh").click(function () {
+                if (xf ==0) {
+                    showMyMessage("您当前购物车无商品，请先选购商品","red");
+                    return;
+                }
+                $(".hecks:Checked").each(function () {
+                    var bj = $("#JfDhTbCxSj").datagrid('getRows')[parseInt($(this).attr("id").substring(5))];
+                    if (bj.EG_sum!=undefined) {
+                        gwc.push({
+                            S_ID: 0,
+                            U_ID: 0,
+                            MC_ID: parseInt($("#labMC_ID").text()),
+                            MC_CardID: $("#lblShiftCardID").text(),
+                            MC_Name: $("#lblShiftName").text(),
+                            EG_ID: parseInt(bj.EG_ID),
+                            EG_GiftCode: bj.EG_GiftCode,
+                            EG_GiftName: bj.EG_GiftName,
+                            EL_Number: parseInt(bj.EG_sum),
+                            EL_Point: parseInt(bj.EG_sum) * parseInt(bj.EG_Point)
+                        })
+                    }
+
+                })
+                $.getJSON("/JfDh/DoJfDh", { gwc: JSON.stringify(gwc), xf: xf }, function (e) {
+                    if (e) {
+                        showMyMessage("恭喜兑换成功", "green");
+                        gwc = new Array();
+                        xf = 0;
+                        $("#lblxf").text("￥" + xf );
+                        JfDh();
+                        $("#btnTransQuery").click();
+                        return;
+                    }
+                    showMyMessage("系统异常兑换失败！","red");
+
+                })
+            })
+    //查询
+            $("#btnTransQuery").click(function () {
+                var mcId = $("#txtCardID").val();
+                if (mcId == "") {
+                    showMyMessage("会员卡号不能为空", "red");
+                    return;
+                }
+                var res = /^[0-9]*$/;
+                if (!res.test(mcId)) {
+                    showMyMessage("会员卡号只能是数字", "red");
+                    return;
+                }
+
+                $.getJSON("/JfDh/QueryVipIsNull", { cardNumber: mcId }, function (d) {
+                    if (d==true) {
+                        showMyMessage("此卡号已挂失或冻结，如有疑问请联系客服", "red");
+                        return;
+                    }
+                    if (d.pd) {
+                        $("#lblErr").text("");
+                        $("#labMC_ID").text(d.MC_ID);
+                        $("#lblShiftCardID").text(d.MC_CardID);
+                        $("#lblShiftName").text(d.MC_Name);
+                        $("#lblShiftMC_Point").text(d.MC_Point);
+                        $("#lblShiftMC_TotalMoney").text(d.MC_TotalMoney);
+                    }
+                    else {
+                        showMyMessage("会员卡号不存在", "red");
+                        return;
+                    }
+                })
+            })
+    //编辑单元格
+            var eidcell = undefined;
+            $("#JfDhTbCxSj").datagrid({
+                onClickCell: function (index, field, value) {
+                    if (field == "wqw") {
+                        return;
+                    }
+                    if (eidcell != undefined) {
+                        $("#JfDhTbCxSj").datagrid('endEdit', eidcell);
+                        var bj = $("#JfDhTbCxSj").datagrid('getRows')[eidcell];
+                        var pddd = false;
+                        var sum = bj.EG_sum.length == 0 ? 0 : bj.EG_sum;
+                        var res = /^[0-9]*$/;
+                       
+                        if (!res.test(sum)) {
+                            showMyMessage("请输入正确数据！", "red");
+                            pddd = true;
+                        }
+
+                        if (parseInt(bj.EG_Number) < parseInt(sum)) {
+                            showMyMessage("礼品数量不足请重新输入！", "red");
+                            pddd = true;
+                        }
+                        if (pddd) {
+                            $("#JfDhTbCxSj").datagrid('beginEdit', eidcell);
+                            var ed = $("#JfDhTbCxSj").datagrid('getEditor', { index: eidcell, field: field });
+                            return;
+                        }
+                        eidcell = undefined;
+                    }
+                    if (field == 'EG_sum') {
+                        if ($("#lblShiftMC_Point").text() == "") {
+                            showMyMessage("请先查找会员再进行兑换操作", "red");
+                            return;
+                        }
+                        if ($("#Check" + index).is(":Checked")) {
+                            showMyMessage("请先解除勾选状态再进行更改;", "red");
+                            return;
+                        }
+                        $("#JfDhTbCxSj").datagrid('beginEdit', index);
+                        var ed = $("#JfDhTbCxSj").datagrid('getEditor', { index: index, field: field });
+                        eidcell = index;
+                    }
+                }
+            })
+
+            function chboxcic(tis) {
+                if ($("#lblShiftMC_Point").text() == "" ) {
+                    showMyMessage("请先查找会员再进行兑换操作", "red");
+                        $(tis).removeAttr("checked");
+                    return;
+                }
+                if ($(tis).is(":Checked")) {
+                    if (eidcell == parseInt($(tis).attr("id").substring(5))) {
+                        showMyMessage("请先确认本商品的换购数量再进行此操作", "red");
+                        $(tis).removeAttr("checked");
+                        return;
+                    }
+
+                    var xj = 0
+                    var bj = $("#JfDhTbCxSj").datagrid('getRows')[parseInt($(tis).attr("id").substring(5))];
+                    if (bj.EG_sum==undefined) {
+                        return;
+                    }
+                    if ((xf+parseInt(bj.EG_sum) * parseInt(bj.EG_Point)) > parseInt($("#lblShiftMC_Point").text())) {
+                        showMyMessage("您所勾选的商品价值已超出您的剩余积分！", "red");
+                        $(tis).removeAttr("checked");
+                            return;
+                    }
+
+                    xf += parseInt(bj.EG_sum == undefined ? 0 : bj.EG_sum) * parseInt(bj.EG_Point);
+                } else {
+                    var bj = $("#JfDhTbCxSj").datagrid('getRows')[parseInt($(tis).attr("id").substring(5))];
+                    if (bj.EG_sum != undefined) {
+                        xf -= parseInt(bj.EG_sum) * parseInt(bj.EG_Point);
+                    }
+
+                }
+                $("#lblxf").text("￥" + xf);
+            }
+
+            //查询方法
+            function JfDh() {
+                $("#JfDhTbCxSj").datagrid({
+                    url: '/GiftsGl/getUserlist',
+                    columns: [[
+                        {
+                            field: 'wqw', title: '<input class="Checks" type="checkbox" />',
+                            formatter: function (value, row, index) {
+                                return '<input id="Check' + index + '" class="hecks" onclick="chboxcic(this)"   type="checkbox" />';
+                            }
+                        },
+                        { field: 'EG_ID', title: '礼品编号' },
+                        { field: 'EG_GiftCode', title: '礼品代号' },
+                        { field: 'EG_GiftName', title: '礼品名称' },
+                        { field: 'EG_Point', title: '所需积分' },
+                        { field: 'EG_Number', title: '礼品数量' },
+                        { field: 'EG_ExchangNum', title: '已兑换数量' },
+                        { field: 'EG_Remark', title: '备注' },
+                        { field: 'EG_sum', title: '兑换数量', editor: 'text' }
+                    ]],
+
+                    singleSelect: true,
+                    pagination: true,
+                    pageSize: 5,
+                    pageList: [5, 10, 15]
+                });
+
+            }
+</script>

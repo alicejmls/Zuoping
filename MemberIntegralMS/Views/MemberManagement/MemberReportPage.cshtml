@@ -1,0 +1,50 @@
+﻿
+@{
+    Layout = null;
+}
+
+
+<br />
+
+<script>
+    $(function () {
+
+        var reportRow = $("#TbVipInfo").datagrid('getSelected');
+        
+        $("#txtReportMC_CardID").val(reportRow.MC_CardID);
+
+        //绑定会员卡状态
+        $("#txtReportState").combobox({
+            url: '/MemberManagement/GetState',
+            valueField: "MC_State",
+            textField: "CI_Name",
+            panelHeight:80
+        });
+        $('#txtReportState').combobox('setValue', reportRow.MC_State);
+
+        $("#btnReportUpdate").click(function () {
+
+            $.getJSON("/MemberManagement/MemberReport", { MC_ID: reportRow.MC_ID, MC_State: parseInt($('#txtReportState').combobox('getValue', "MC_State")) }, function (d) {       
+                alert(d ? "修改成功" : "系统异常修改失败！");
+                $("#VipUpOrAddFrom").dialog("close");
+                $("#TbVipInfo").datagrid("reload");
+            })
+
+        })
+        $("#btnReportCancel").click(function () {
+            $("#VipUpOrAddFrom").dialog("close");
+        })
+    })
+</script>
+<br />
+<table>
+    <tr><td>会员卡号：</td><td><input id="txtReportMC_CardID" style="width:150px;" readonly="readonly" ></td></tr>
+    <tr><td>状态：</td><td><input id="txtReportState" style="width:150px"></td></tr>
+    <tr>
+        <td></td>
+        <td>
+            <a id="btnReportUpdate" class="easyui-linkbutton" data-options="iconCls:'icon-ok'">修改</a>
+            <a id="btnReportCancel" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'">取消</a>
+        </td>
+    </tr>
+</table>

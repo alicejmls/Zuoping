@@ -1,0 +1,117 @@
+﻿@{
+    Layout = null;
+}
+   <br />
+
+<div style="margin-left:10px;">
+    <div >
+        <a class="easyui-linkbutton" onclick="TancAdd()" data-options="iconCls:'icon-add'">新增</a>
+        <a class="easyui-linkbutton" onclick="ShopUpdate()" data-options="iconCls:'icon-edit'">修改</a>
+        <a class="easyui-linkbutton" onclick="ShopDelete()" data-options="iconCls:'icon-no'">删除</a>
+        <a class="easyui-linkbutton" onclick="TancUpAdmin()" data-options="iconCls:'icon-undo'">分配管理员</a>
+    </div>
+    <div>
+        店铺名称：<input id="txtS_Name" type="text" />
+        联系人：<input id="txtS_ContactName" type="text" />
+        店铺地址：<input id="txtS_Address" type="text" />
+        <a class="easyui-linkbutton" onclick="ShopGCx()" data-options="iconCls:'icon-search'">查询</a>
+    </div>
+    <div id="TbCxSj"></div>
+    <div id="UpOrAddFrom"></div>
+</div>
+    <script>
+        $(function () {
+            ShopGCx();
+        })
+        //弹出添加窗口
+        function TancAdd() {
+            $("#TbCxSj").datagrid('clearSelections');
+            $("#UpOrAddFrom").dialog({
+                title: "新增",						//弹出界面的标题
+                width: 300,
+                height: 260,
+                href: "/ShopGl/AddOrUpdate",						//弹出界面的url地址
+                modal: true						//是否是模态窗口
+
+            })
+        }
+        //修改方法
+        function ShopUpdate() {
+
+            var rows = $("#TbCxSj").datagrid('getSelected');
+            if (rows == null) {
+                alert("请选择要修改的项");
+                return;
+            }
+            $("#UpOrAddFrom").dialog({
+                title: "修改",						//弹出界面的标题
+                width: 300,
+                height: 260,
+                href: "/ShopGl/AddOrUpdate",						//弹出界面的url地址
+                modal: true						//是否是模态窗口
+
+            })
+        }
+        //删除方法
+        function ShopDelete() {
+            var rows = $("#TbCxSj").datagrid('getSelected');
+            if (rows == null) {
+                alert("请选择要删除的项");
+                return;
+            }
+            var r = confirm("确认删除？");
+            if (!r) {
+                return;
+            }
+
+            $.getJSON("/ShopGl/ShopGlDelete", { S_ID: rows.S_ID }, function (e) {
+                alert(e ? "删除成功" : "店铺仍存在运营信息或系统异常无法删除！");
+                $("#TbCxSj").datagrid("reload");
+            })
+        }
+        //弹出分配管理员窗口
+        function TancUpAdmin() {
+            var rows = $("#TbCxSj").datagrid('getSelected');
+            if (rows == null) {
+                alert("请选择要修改的项");
+                return;
+            }
+            if (rows.S_IsHasSetAdmin) {
+                alert("此商铺已分配账号！");
+                return;
+            }
+            $("#UpOrAddFrom").dialog({
+                title: "分配",						//弹出界面的标题
+                width: 400,
+                height: 120,
+                href: "/ShopGl/TancUpAdmin",						//弹出界面的url地址
+                modal: true						//是否是模态窗口
+            })
+        }
+        //查询方法
+        function ShopGCx() {
+            $("#TbCxSj").datagrid({
+                url: '/ShopGl/getShopslist',
+                queryParams: {
+                    S_Name: $("#txtS_Name").val(),
+                    S_ContactName: $("#txtS_ContactName").val(),
+                    S_Address: $("#txtS_Address").val()
+                },
+                columns: [[
+
+                    { field: 'S_ID', title: '店铺编号' },
+                    { field: 'S_Name', title: '店铺名称' },
+                    { field: 'CI_Name', title: '店铺类型' },
+                    { field: 'S_ContactName', title: '联系人' },
+                    { field: 'S_ContactTel', title: '联系电话' },
+                    { field: 'S_Address', title: '地址' },
+                ]],
+                singleSelect: true,
+                idField: "S_ID",
+                pagination: true,
+                pageSize: 5,
+                pageList: [5, 10, 15]
+            });
+        }
+    </script>
+

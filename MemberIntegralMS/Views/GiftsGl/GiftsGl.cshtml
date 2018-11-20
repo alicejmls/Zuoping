@@ -1,0 +1,96 @@
+﻿@{
+    Layout = null;
+}
+
+<br />
+
+
+<div style="margin-left:10px;">
+    <div>
+        <a  class="easyui-linkbutton" onclick="GifTancAdd()" data-options="iconCls:'icon-add'">新增</a>
+        <a  class="easyui-linkbutton" onclick="GiftGUpdate()" data-options="iconCls:'icon-edit'">修改</a>
+        <a  class="easyui-linkbutton" onclick="GiftGDelete()" data-options="iconCls:'icon-no'">删除</a>
+    </div>
+    <div id="GifTbCxSj"></div>
+    <div id="GifUpOrAddFrom"></div>
+</div>
+<script>
+        $(function () {
+
+            GiftGCx();
+        })
+        //弹出添加窗口
+        function GifTancAdd() {
+            $("#GifTbCxSj").datagrid('clearSelections');
+            $("#GifUpOrAddFrom").dialog({
+                title: "新增",						//弹出界面的标题
+                width: 360,
+                height: 480,
+                href: "/GiftsGl/AddOrUpdate",						//弹出界面的url地址
+                modal: true						//是否是模态窗口
+            })
+        }
+        //修改方法
+        function GiftGUpdate() {
+
+            var rows = $("#GifTbCxSj").datagrid('getSelected');
+            if (rows == null) {
+                alert("请选择要修改的项");
+                return;
+            }
+            $("#GifUpOrAddFrom").dialog({
+                title: "修改",						//弹出界面的标题
+                width: 330,
+                height: 500,
+                href: "/GiftsGl/AddOrUpdate",						//弹出界面的url地址
+                modal: true						//是否是模态窗口
+
+            })
+        }
+        //删除方法
+        function GiftGDelete() {
+            var rows = $("#GifTbCxSj").datagrid('getSelected');
+            if (rows == null) {
+                alert("请选择要删除的项");
+                return;
+            }
+            var r = confirm("确认删除？");
+            if (!r) {
+                return;
+            }
+
+            $.getJSON("/GiftsGl/UserGlDelete", { EG_ID: rows.EG_ID }, function (e) {
+                alert(e ? "删除成功" : "系统异常无法删除！");
+                $("#GifTbCxSj").datagrid("reload");
+            })
+        }
+        //查询方法
+        function GiftGCx() {
+            $("#GifTbCxSj").datagrid({
+                url: '/GiftsGl/getUserlist',
+                columns: [[
+                    { field: 'EG_ID', title: '礼品编号' },
+                    { field: 'EG_GiftCode', title: '礼品代号' },
+                    { field: 'EG_GiftName', title: '礼品名称' },
+                    { field: 'EG_Point', title: '所需积分' },
+                    { field: 'EG_Number', title: '礼品数量' },
+                    { field: 'EG_ExchangNum', title: '已兑换数量' },
+                    {
+                        field: 'EG_Photo', title: '礼品图片',
+                        formatter: function (value) {
+                            if (value == null || value=="") {
+                                return "无样品图";
+                            }
+                            return "<img src='" + value + "' width='100' height='100'/>";
+                        }
+                    },
+                   
+                    { field: 'EG_Remark', title: '备注' }
+                ]],
+                singleSelect: true,
+                pagination: true,
+                pageSize: 5,
+                pageList: [5, 10, 15]
+            });
+        }
+</script>

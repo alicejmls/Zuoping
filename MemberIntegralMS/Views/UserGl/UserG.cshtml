@@ -1,0 +1,114 @@
+﻿
+@{
+    Layout = null;
+}
+
+<br />
+
+        <div style="margin-left:10px;">
+            <div>
+                <a  class="easyui-linkbutton" onclick="TancAdd()" data-options="iconCls:'icon-add'">新增</a>
+                <a  class="easyui-linkbutton" onclick="ShopUpdate()" data-options="iconCls:'icon-edit'">修改</a>
+                <a  class="easyui-linkbutton" onclick="ShopDelete()" data-options="iconCls:'icon-no'">删除</a>
+            </div>
+            <div>
+                登录名：<input id="txtU_LoginName" type="text" />
+                真实姓名：<input id="txtU_RealName" type="text" />
+                联系电话：<input id="txtU_Telephone" type="text" />
+                <a  class="easyui-linkbutton" onclick="ShopGCx()" data-options="iconCls:'icon-search'">查询</a>
+            </div>
+            <div id="TbCxSj"></div>
+            <div id="UpOrAddFrom"></div>
+        </div>
+ 
+        <script>
+            $('#wu-category-tree').tree({
+                url: 'temp/menu.php',
+                onClick: function (node) {
+                    alert(node.text);
+                }
+            });
+            $(function () {
+
+                ShopGCx();
+            })
+            //弹出添加窗口
+            function TancAdd() {
+                $("#TbCxSj").datagrid('clearSelections');
+                $("#UpOrAddFrom").dialog({
+                    title: "新增",						//弹出界面的标题
+                    width: 330,
+                    height: 260,
+                    href: "/UserGl/AddOrUpdate",						//弹出界面的url地址
+                    modal: true						//是否是模态窗口
+                })
+            }
+            //修改方法
+            function ShopUpdate() {
+
+                var rows = $("#TbCxSj").datagrid('getSelected');
+                if (rows == null) {
+                    alert("请选择要修改的项");
+                    return;
+                }
+                $("#UpOrAddFrom").dialog({
+                    title: "修改",						//弹出界面的标题
+                    width: 330,
+                    height: 260,
+                    href: "/UserGl/AddOrUpdate",						//弹出界面的url地址
+                    modal: true						//是否是模态窗口
+
+                })
+            }
+            //删除方法
+            function ShopDelete() {
+                var rows = $("#TbCxSj").datagrid('getSelected');
+                if (rows == null) {
+                    alert("请选择要删除的项");
+                    return;
+                }
+                if (!rows.U_CanDelete) {
+                    alert("请先把此用户修改为可删除再执行此操作！");
+                    return;
+                }
+                var r = confirm("确认删除？");
+                if (!r) {
+                    return;
+                }
+
+                $.getJSON("/UserGl/UserGlDelete", { U_ID: rows.U_ID }, function (e) {
+                    alert(e ? "删除成功" : "系统异常无法删除！");
+                    $("#TbCxSj").datagrid("reload");
+                })
+            }
+            //查询方法
+            function ShopGCx() {
+                $("#TbCxSj").datagrid({
+                    url: '/UserGl/getUserlist',
+                    queryParams: {
+                        U_LoginName: $("#txtU_LoginName").val(),
+                        U_RealName: $("#txtU_RealName").val(),
+                        U_Telephone: $("#txtU_Telephone").val()
+                    },
+                    columns: [[
+
+                        { field: 'U_ID', title: '用户编号' },
+                        { field: 'U_LoginName', title: '登录名' },
+                        { field: 'U_RealName', title: '真实姓名' },
+                        { field: 'U_Sex', title: '性别' },
+                        { field: 'U_Telephone', title: '联系电话' },
+                        { field: 'CI_Name', title: '用户角色' },
+                        {
+                            field: 'U_CanDelete', title: '是否可以删除',
+                            formatter: function (value, row, index) {
+                                return value ? "可以" : "不可以";
+                            }
+                        }
+                    ]],
+                    singleSelect: true,
+                    pagination: true,
+                    pageSize: 5,
+                    pageList: [5, 10, 15]
+                });
+            }
+        </script>

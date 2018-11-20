@@ -1,0 +1,71 @@
+﻿@{
+    Layout = null;
+}
+
+<br />
+
+<div style="margin-left:10px;">
+    <div>
+        会员卡号/电话：<input id="txtU_Telephone" type="text" />
+        <a  class="easyui-linkbutton" onclick="JfDhCx()" data-options="iconCls:'icon-search'">查询</a>
+    </div>
+    <div id="JfTbCxSj"></div>
+</div>
+<script>
+   
+        $(function () {
+
+            JfDhCx();
+        })
+        //查询方法
+    function JfDhCx() {
+            if ($("#txtU_Telephone").val()!="") {
+                var res = /^[0-9]*$/;
+                if (!res.test($("#txtU_Telephone").val())) {
+                    alert("请输入正确的手机号/卡号");
+                    return;
+                }
+            }
+            $.getJSON("/VipConsume/QueryVipIdOrTel", { MC_CardID: $("#txtU_Telephone").val(), MC_Mobile: $("#txtU_Telephone").val() }, function (d) {
+                if ($("#txtU_Telephone").val()=="") {
+                    d.pd = "1";
+                }
+                if (d.pd == "-1") {
+                    alert(" 手机号有重复的，请检查数据库数据是否合法");
+                    return;
+                }
+                else if (d.pd == "0") {
+                    alert("卡号或手机号不存在");
+                    return;
+                }
+                else if (d.pd == "1") {
+
+
+                    $("#JfTbCxSj").datagrid({
+                        url: '/JfDh/DoJfDhcx',
+                        queryParams: {
+                            U_Telephone: $("#txtU_Telephone").val()
+                        },
+                        columns: [[
+
+                            { field: 'EG_GiftName', title: '礼品名称' },
+                            { field: 'EL_Point', title: '所需积分' },
+                            { field: 'EL_Number', title: '兑换数量' },
+                            {
+                                field: 'EL_CreateTime', title: '兑换时间',
+                                formatter: function (value, row, index) {
+                                    var pa = /.*\((.*)\)/;   //获取    /Date(时间戳) 括号中的字符串时间戳 的正则表达式
+                                    var unixtime = value.match(pa)[1].substring(0, 10); //通过正则表达式来获取到时间戳的字符串
+                                    return getTime(unixtime);
+                                }
+                            }
+                        ]],
+                        singleSelect: true,
+                        pagination: true,
+                        pageSize: 5,
+                        pageList: [5, 10, 15]
+                    });
+                }
+            })
+        }
+</script>

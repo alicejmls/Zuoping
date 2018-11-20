@@ -1,0 +1,159 @@
+﻿
+@{
+    Layout = null;
+}
+
+<br />
+
+
+<div>
+    <br />
+    <form>
+        <table>
+            <tr>
+                <td>等级名称：</td>
+                <td><input id="txtMgCL_LevelNames" style="width:150px"><label id="lblMgCL_LevelNames" style="color:red"></label></td>
+            </tr>
+            <tr>
+                <td>所需最大积分：</td>
+                <td><input id="txtMgCL_NeedPoint" style="width:150px" /><label id="lblMgCL_NeedPoint" style="color:red"></label></td>
+            </tr>
+            <tr>
+                <td>兑换比例：</td>
+                <td><input id="txtMgCL_Point" style="width:150px"><label id="lblMgCL_Point" style="color:red"></label></td>
+            </tr>
+            <tr>
+                <td>折扣比例：</td>
+                <td><input id="txtMgCL_Percent" style="width:150px"><label id="lblMgCL_Percent" style="color:red"></label></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>
+                    <a id="btnMgAddOrUpdate" class="easyui-linkbutton" data-options="iconCls:'icon-ok'">确定</a>
+                    <a id="btnMgCancel" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'">取消</a>
+                </td>
+            </tr>
+        </table>
+    </form>
+</div>
+<script>
+    $(function () {
+        //文本框的合法性验证
+
+        var b1 = 0;
+        var b2 = 0;
+        var b3 = 0;
+        var b4 = 0;
+        $("#txtMgCL_LevelNames").blur(function () {
+            if ($("#txtMgCL_LevelNames").val() == "") {
+                $("#lblMgCL_LevelNames").text("* 必填");
+                return;
+            }
+            b1 = 1;
+            $("#lblMgCL_LevelNames").text("");
+        })
+
+        $("#txtMgCL_NeedPoint").blur(function () {
+            if ($("#txtMgCL_NeedPoint").val() == "") {
+                $("#lblMgCL_NeedPoint").text("* 必填"); 
+                return;
+            }
+            if (isNaN(parseInt($("#txtMgCL_NeedPoint").val()))) {
+                $("#lblMgCL_NeedPoint").text("* 只能是整数");
+                return;
+            }
+            b2 = 1;
+            $("#lblMgCL_NeedPoint").text("");
+        })
+
+        $("#txtMgCL_Point").blur(function () {
+            if ($("#txtMgCL_Point").val() == "") {
+                $("#lblMgCL_Point").text("* 必填");;
+                return;
+            }
+            var point = parseInt($("#txtMgCL_Point").val());
+            if (isNaN(point) || (point < 0 || point > 10)) {
+                $("#lblMgCL_Point").text("* 只能是0~10(含)之间的整数");
+                return;
+            }
+            b3 = 1;
+            $("#lblMgCL_Point").text("");
+        })
+
+        $("#txtMgCL_Percent").blur(function () {
+            if ($("#txtMgCL_Percent").val() == "") {
+                $("#lblMgCL_Percent").text("* 必填");
+                return;
+            }
+            var percent = parseFloat($("#txtMgCL_Percent").val());
+            if (isNaN(percent) || (percent <= 0 || percent > 1)) {
+                $("#lblMgCL_Percent").text("* 只能0~1(含)之间的小数");
+                return;
+            }
+            b4 = 1;
+            $("#lblMgCL_Percent").text("");
+        })
+
+        var row = $("#MenTbLevels").datagrid('getSelected');
+
+        if (row != null) {
+
+            $("#txtMgCL_LevelNames").val(row.CL_LevelName);
+            $("#txtMgCL_NeedPoint").val(row.CL_NeedPoint);
+            $("#txtMgCL_Point").val(row.CL_Point);
+            $("#txtMgCL_Percent").val(row.CL_Percent);
+        }
+        $("#btnMgAddOrUpdate").mousedown(function () {
+            $(":text").blur();
+            if ((b1+b2+b3+b4) < 4) {
+                return;
+            }
+
+            if (row == null) {
+                var sj = {
+                    CL_LevelName: $("#txtMgCL_LevelNames").val(),
+                    CL_NeedPoint: $("#txtMgCL_NeedPoint").val(),
+                    CL_Point: $("#txtMgCL_Point").val(),
+                    CL_Percent: $("#txtMgCL_Percent").val()
+                }
+                $.getJSON("/MemberGrade/MgAddOrUpdate", sj, function (e) {
+                    if (e == -1) {
+                        alert("等级名称已存在！");
+                        return;
+                    }
+                    alert(e ? "添加成功" : "系统异常添加失败！");
+                    $("#MgUpOrAddFrom").dialog("close");
+                    $("#MenTbLevels").datagrid("reload");
+                    return;
+                }
+                )
+            }
+            else {
+
+                var sj = {
+                    CL_ID: row.CL_ID,
+                    CL_LevelName: $("#txtMgCL_LevelNames").val(),
+                    CL_NeedPoint: $("#txtMgCL_NeedPoint").val(),
+                    CL_Point: $("#txtMgCL_Point").val(),
+                    CL_Percent: $("#txtMgCL_Percent").val()
+                }
+                $.getJSON("/MemberGrade/MgAddOrUpdate", sj, function (e) {
+                    if (e == -1) {
+                        alert("您要修改的等级名称已存在！");
+                        return;
+                    }
+                    alert(e ? "修改成功" : "系统异常修改失败！");
+
+                    $("#MgUpOrAddFrom").dialog("close");
+                    $("#MenTbLevels").datagrid("reload");
+                    return;
+                }
+                )
+            }
+        })
+        $("#btnMgCancel").click(function () {
+            $("#MgUpOrAddFrom").dialog("close");
+        })
+
+    })
+</script>

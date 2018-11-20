@@ -1,0 +1,182 @@
+﻿@{
+    Layout = null;
+}
+
+
+
+
+<br />
+
+<br />
+<h3>查找会员</h3>
+
+
+<table>
+    <tr>
+        <td>卡号/手机：</td>
+        <td><input style="width:150px" id="txtMC_CardIDOrMC_Mobile" />&nbsp;<a id="btnConsumeQuery" class="easyui-linkbutton" data-options="iconCls:'icon-search'">查找</a><label id="lblMC_CardIDOrMC_Mobile" style="color:red"></label></td>
+        <td>消费时间：</td>
+        <td><label id="lblCsmTime"></label></td>
+    </tr>
+    <tr>
+        <td>姓名：</td>
+        <td><label id="lblCsmMC_Name"></label></td>
+        <td>等级：</td>
+        <td><label id="lblCsmCL_ID"></label></td>
+    </tr>
+    <tr>
+        <td>当前积分：</td>
+        <td><label id="lblCsmMC_Point"></label></td>
+        <td>累计消费：</td>
+        <td><label id="lblCsmMC_TotalMoney">￥</label></td>
+    </tr>
+</table>
+<br />
+
+<label id="lblCsmCL_Point" hidden="hidden"></label>
+<label id="lblCsmCL_Percent" hidden="hidden"></label>
+<label id="lblCsmMC_ID" hidden="hidden"></label>
+<label id="lblCsmMC_CardID" hidden="hidden"></label>
+<label id="lblCsmCL_IDs" hidden="hidden"></label>
+
+<h4><label style="color:red">暂无优惠活动</label></h4><br />
+<table>
+    <tr>
+        <td>请输入消费金额：</td>
+        <td><input style="width:150px" id="txtCsmMoneys" readonly="readonly" /><label style="color:red" id="lblCsmMoneys"></label></td>
+        <td colspan="2">此处输入金额会按会员等级自动打折</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>折后总金额：</td>
+        <td><input style="width:150px" id="txtDiscountMoneys" readonly="readonly" /></td>
+        <td>可自动累计积分数量：</td>
+        <td><input style="width:150px" id="txtPointNum" readonly="readonly" /></td>
+    </tr>
+    <tr>
+        <td>付费方式：</td>
+        <td><input type="radio" checked="checked" />现金支付</td>
+        <td>优惠活动：</td>
+        <td><label style="color:red">暂无</label></td>
+    </tr>
+</table>
+<br />
+
+<a id="btnCsmUpdate" class="easyui-linkbutton" data-options="iconCls:'icon-ok'">结算</a>
+
+<script>
+    
+    $(function () {
+
+        $("#lblCsmTime").text(new Date().Format("yyyy-MM-dd HH:mm:ss"));
+        var b = 0;
+        $("#btnConsumeQuery").click(function () {
+
+            if ($("#txtMC_CardIDOrMC_Mobile").val() == "") {
+                $("#lblMC_CardIDOrMC_Mobile").text("* 必填");
+                return;
+            }
+
+            $.ajax({
+                async: false,
+                url: "/VipConsume/QueryVipIdOrTel",
+                data: { MC_CardID: $("#txtMC_CardIDOrMC_Mobile").val(), MC_Mobile: $("#txtMC_CardIDOrMC_Mobile").val() },
+                type: "get",
+                dataType: "json",
+                success: function (d) {
+                    if (d.pd == "-1") {
+                        $("#lblMC_CardIDOrMC_Mobile").text("* 手机号有重复的，请检查数据库数据是否合法");
+                        return;
+                    }
+                    else if (d.pd == "0") {
+                        $("#lblMC_CardIDOrMC_Mobile").text("* 卡号或手机号不存在");
+                        return;
+                    }
+                    else if (d.pd == "1") {
+                        $("#lblMC_CardIDOrMC_Mobile").text("");
+                        $("#lblCsmMC_Name").text(d.mc[0].MC_Name);
+                        $("#lblCsmCL_ID").text(d.mc[0].CL_LevelName + "(折扣比例：" + d.mc[0].CL_Percent + ")");
+                        $("#lblCsmMC_Point").text(d.mc[0].MC_Point);
+                        $("#lblCsmMC_TotalMoney").text("￥" + d.mc[0].MC_TotalMoney);
+                        $("#lblCsmCL_Point").text(d.mc[0].CL_Point);
+                        $("#lblCsmCL_Percent").text(d.mc[0].CL_Percent);
+                        $("#lblCsmMC_ID").text(d.mc[0].MC_ID);
+                        $("#lblCsmMC_CardID").text(d.mc[0].MC_CardID);
+                        $("#lblCsmCL_IDs").text(d.mc[0].CL_ID);
+
+                        $("#txtCsmMoneys").attr("readonly", false);
+                        $("#txtCsmMoneys").blur(function () {
+
+                            if ($("#txtCsmMoneys").val() == "") {
+                                $("#lblCsmMoneys").text("* 必填");
+                                return;
+                            }
+                            if (isNaN(parseInt($("#txtCsmMoneys").val()))) {
+                                $("#lblCsmMoneys").text("* 只能是数字");
+                                return;
+                            }
+                            b = 1;
+                            $("#lblCsmMoneys").text("");
+                            $("#txtDiscountMoneys").val("" + (parseFloat($("#txtCsmMoneys").val())) * (parseFloat($("#lblCsmCL_Percent").text())));
+                            $("#txtPointNum").val("" + parseInt((parseFloat($("#txtCsmMoneys").val())) / (parseFloat($("#lblCsmCL_Point").text()))));
+
+                        })
+                    }
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    alert("错误信息：" + XMLHttpRequest.responseText);
+                }
+            })
+        })
+
+
+
+
+        //结算
+        $("#btnCsmUpdate").mousedown(function () {
+            $("#btnConsumeQuery").click();
+            $("#txtCsmMoneys").blur();
+            if (b < 1) {
+                return;
+            }
+            var data = {
+                MC_ID: parseInt($("#lblCsmMC_ID").text()),
+                MC_CardID: $("#lblCsmMC_CardID").text(),
+                CO_DiscountMoney: parseFloat($("#txtDiscountMoneys").val()),
+                PointNum: parseInt($("#txtPointNum").val())
+            }
+
+            $.getJSON("/VipConsume/FastConsume", data, function (d) {
+                if (d) {
+                    
+                    $.ajax({
+                        async: false,
+                        url: "/VipConsume/VipUpgrade",
+                        data: {
+                            MC_ID: parseInt($("#lblCsmMC_ID").text()),
+                            CL_ID: parseInt($("#lblCsmCL_IDs").text()),
+                            MC_Point: parseInt($("#lblCsmMC_Point").text()) + parseInt($("#txtPointNum").val())
+                        },
+                        type: "get",
+                        dataType: "json",
+                        success: function (d) {
+                            if (d) {
+                                alert("操作成功，【" + $("#lblCsmMC_CardID").text() + "】的会员等级升级啦！");
+                               
+                            }
+                            else {
+                                
+                                alert("操作成功");
+                            }
+                        },
+                        error: function (XMLHttpRequest, textStatus, errorThrown) {
+                            alert("错误信息：" + XMLHttpRequest.responseText);
+                        }
+                    })
+                    $("#btnConsumeQuery").click();
+                }
+
+            })
+        })
+    })
+</script>

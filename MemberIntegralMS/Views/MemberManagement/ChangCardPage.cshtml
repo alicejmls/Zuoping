@@ -1,0 +1,153 @@
+﻿
+
+@{
+    Layout = null;
+}
+
+
+
+<script>
+    $(function () {
+
+        var row = $("#TbVipInfo").datagrid('getSelected');
+
+        $("#cgMC_Name").text(row.MC_Name);
+        $("#cgCL_ID").text(row.CL_ID);
+        var pa = /.*\((.*)\)/;   //获取    /Date(时间戳) 括号中的字符串时间戳 的正则表达式
+        var unixtime = row.MC_PastTime.match(pa)[1].substring(0, 10); //通过正则表达式来获取到时间戳的字符串
+        $("#cgMC_CreateTime").text(getTime(unixtime));
+
+
+        var b1 = 0;
+        var b2 = 0;
+        var b3 = 0;
+        var b4 = 0;
+        $("#txtCgMC_Password").blur(function () {
+
+            if ($("#txtCgMC_Password").val() == "") {
+                $("#lblCgMC_Password").text("* 必填");
+                return;
+            }
+            $.getJSON("/MemberManagement/QueryVipPwd", { MC_Password: $("#txtCgMC_Password").val() }, function (d) {
+                if (d) {
+                    $("#lblCgMC_Password").text("* 密码错误");
+                    return;
+                }
+                b1 = 1;
+                $("#lblCgMC_Password").text("");
+            })
+        })
+
+        $("#txtCgMC_CardID").blur(function () {
+
+            if ($("#txtCgMC_CardID").val() == "") {
+                $("#lblCgMC_CardID").text("* 必填");
+                return;
+            }
+            b2 = 1;
+            $("#lblCgMC_CardID").text("");
+        })
+
+        $("#txtCgOldMC_Password").blur(function () {
+
+            if ($("#txtCgOldMC_Password").val() == "") {
+                $("#lblCgOldMC_Password").text("* 必填");
+                return;
+            }
+            if ($("#txtCgOldMC_Password").val() == $("#txtCgMC_Password").val()) {
+                $("#lblCgOldMC_Password").text("不能为之前的旧密码");
+                return;
+            }
+            b3 = 1;
+            $("#lblCgOldMC_Password").text("");
+        })
+
+        $("#txtCgOkMC_Password").blur(function () {
+
+            if ($("#txtCgOkMC_Password").val() == "") {
+                $("#lblCgOkMC_Password").text("* 必填");
+                return;
+            }
+            if ($("#txtCgOkMC_Password").val() != $("#txtCgOldMC_Password").val()) {
+                $("#lblCgOkMC_Password").text("* 两次密码不一致");
+                return;
+            }
+            b4 = 1;
+            $("#lblCgOkMC_Password").text("");
+        })
+        //换卡
+        $("#btnChangeUpdate").mousedown(function () {
+            $("input").blur();
+            if ((b1+b2+b3+b4) < 4) {
+                return;
+            }
+            var data = {
+                MC_ID: row.MC_ID,
+                MC_CardID: $("#txtCgMC_CardID").val(),
+                MC_Password: $("#txtCgOkMC_Password").val()    
+            }
+
+            $.getJSON("/MemberManagement/ChangCard", data, function (d) {
+                alert(d ? "换卡成功" : "系统异常，换卡失败！");
+                $("#VipUpOrAddFrom").dialog("close");
+                $("#TbVipInfo").datagrid("reload");
+            })
+
+        })
+
+        //取消
+        $("#btnChangeCancel").click(function () {
+            $("#VipUpOrAddFrom").dialog("close");
+        })
+    })
+</script>
+<br />
+<h3>会员卡基本信息</h3>
+<table>
+    <tr>
+        <td>会员姓名：</td>
+        <td><label id="cgMC_Name"></label></td>
+    </tr>
+    <tr>
+        <td>会员等级：</td>
+        <td><label id="cgCL_ID"></label></td>
+
+    </tr>
+    <tr>
+        <td>登记日期：</td>
+        <td><label id="cgMC_CreateTime"></label></td>
+    </tr>
+</table>
+<br />
+<br />
+
+<h3>换卡信息</h3>
+
+<table>
+    <tr>
+        <td>请输入此卡密码：</td>
+        <td><input style="width:110px" id="txtCgMC_Password" type="password" /><label id="lblCgMC_Password" style="color:red" ></label></td>
+
+    </tr>
+    <tr>
+        <td>新会员卡号：</td>
+        <td><input style="width:110px" id="txtCgMC_CardID" /><label id="lblCgMC_CardID" style="color:red"></label></td>
+    </tr>
+    <tr>
+        <td>新会员卡密码：</td>
+        <td><input style="width:110px" id="txtCgOldMC_Password" type="password" /><label id="lblCgOldMC_Password" style="color:red"></label></td>
+
+    </tr>
+    <tr>
+        <td>确认密码：</td>
+        <td><input style="width:110px" id="txtCgOkMC_Password" type="password"/><label id="lblCgOkMC_Password" style="color:red"></label></td>
+    </tr>
+    <tr>
+        <td height="50px"><a id="btnChangeUpdate" class="easyui-linkbutton" data-options="iconCls:'icon-ok'">确定</a></td>
+        <td height="50px"><a id="btnChangeCancel" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'">取消</a></td>
+    </tr>
+</table>
+
+
+
+

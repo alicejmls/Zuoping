@@ -1,0 +1,221 @@
+﻿
+@{
+    Layout = null;
+}
+
+<br />
+
+<div style="margin-left:10px;">
+    <div>
+        <a  class="easyui-linkbutton" onclick="MbmgAdd()" data-options="iconCls:'icon-add'">新增</a>
+        <a  class="easyui-linkbutton" onclick="MbmgUpdate()" data-options="iconCls:'icon-edit'">修改</a>
+        <a  class="easyui-linkbutton" onclick="MbmgDelete()" data-options="iconCls:'icon-no'">删除</a>
+        <a  class="easyui-linkbutton" onclick="MbmgDropOrLock()" data-options="iconCls:'icon-lock'">挂失/锁定</a>
+        <a  class="easyui-linkbutton" onclick="MbmgVipTransfer()" data-options="iconCls:'icon-money'">会员转账</a>
+        <a  class="easyui-linkbutton" onclick="MbmgVipChangeCard()" data-options="iconCls:'icon-export'">会员换卡</a>
+        <a  class="easyui-linkbutton" onclick="MbmgDeriveEc()" data-options="iconCls:'icon-redo'">导出Excel</a>
+    </div>
+    <div>
+        会员卡号：<input id="txtVipCardNumber" type="text" />
+        会员姓名：<input id="txtVipName" type="text" />
+        电话：<input id="txtVipTel" type="text" />
+        会员等级：<input id="txtVipGrade" type="text" />
+        状态：<input id="txtState" type="text" />
+        <a id="btn" class="easyui-linkbutton" onclick="MbmgQuery()" data-options="iconCls:'icon-search'">查询</a>
+    </div>
+    <div id="TbVipInfo"></div>
+    <div id="VipUpOrAddFrom"></div>
+</div>
+<script>
+    $(function () {
+            //绑定会员等级
+            $("#txtVipGrade").combobox({
+                url: '/MemberManagement/GetVipGrade',
+                valueField: "CL_ID",
+                textField: "CL_LevelName",
+                loadFilter: function (data) {  //过滤后台返回的数据并显示
+                    var obj = { CL_ID: "0", CL_LevelName: "---请选择---" };
+                    data.splice(0, 0, obj)//在数组0位置插入obj,不删除原来的元素
+                    return data;
+                }
+            });
+            $('#txtVipGrade').combobox('setValue', '0');	
+
+           //绑定会员卡状态
+            $("#txtState").combobox({
+                url: '/MemberManagement/GetState',
+                valueField: "MC_State",
+                textField: "CI_Name",
+                loadFilter: function (data) {  //过滤后台返回的数据并显示
+                    var obj = { MC_State: "0", CI_Name: "---请选择---" };
+                    data.splice(0, 0, obj)//在数组0位置插入obj,不删除原来的元素
+                    return data;
+                }
+            });
+            $('#txtState').combobox('setValue', '0');
+            
+            MbmgQuery();
+        })
+        //弹出添加窗口
+        function MbmgAdd() {
+            $("#TbVipInfo").datagrid('clearSelections');
+            $("#VipUpOrAddFrom").dialog({
+                title: "新增",						//弹出界面的标题
+                width: 700,
+                height: 400,
+                href: "/MemberManagement/MemberAddOrUpdatePage",	//弹出界面的url地址
+                modal: true						//是否是模态窗口
+            })
+        }
+        //修改方法
+        function MbmgUpdate() {
+
+            var rows = $("#TbVipInfo").datagrid('getSelected');
+            if (rows == null) {
+                alert("请选择要修改的项");
+                return;
+            }
+            $("#VipUpOrAddFrom").dialog({
+                title: "修改",						//弹出界面的标题
+                width: 700,
+                height: 400,
+                href: "/MemberManagement/MemberAddOrUpdatePage",		//弹出界面的url地址
+                modal: true						//是否是模态窗口
+
+            })
+        }
+        //删除方法
+        function MbmgDelete() {
+            var rows = $("#TbVipInfo").datagrid('getSelected');
+            if (rows == null) {
+                alert("请选择要删除的项");
+                return;
+            }
+            var r = confirm("确认删除？");
+            if (!r) {
+                return;
+            }
+
+            $.getJSON("/MemberManagement/MemberDelete", { MC_ID: rows.MC_ID }, function (e) {
+                alert(e ? "删除成功" : "系统异常无法删除！");
+                $("#TbVipInfo").datagrid("reload");
+            })
+        }
+
+        //挂失/锁定
+        function MbmgDropOrLock() {
+            var gsRows = $("#TbVipInfo").datagrid('getSelected');
+            if (gsRows == null) {
+                alert("请选择要挂失/锁定的项");
+                return;
+            }
+            $("#VipUpOrAddFrom").dialog({
+                title: "挂失/锁定",						//弹出界面的标题
+                width: 300,
+                height: 200,
+                href: "/MemberManagement/MemberReportPage",		//弹出界面的url地址
+                modal: true						//是否是模态窗口
+
+            })
+        }
+
+        //会员转账
+        function MbmgVipTransfer() {
+            var rows = $("#TbVipInfo").datagrid('getSelected');
+            if (rows == null) {
+                alert("请选择需要操作的行");
+                return;
+            }
+            if (rows.MC_State!=1) {
+                alert("当前会员卡为挂失/锁定状态，无法转账！");
+                return;
+            }
+
+            $("#VipUpOrAddFrom").dialog({
+                title: "会员转账",						//弹出界面的标题
+                width: 300,
+                height: 450,
+                href: "/MemberManagement/MemberTransferPage",		//弹出界面的url地址
+                modal: true						//是否是模态窗口
+
+            })
+            
+        }
+
+        //会员换卡
+        function MbmgVipChangeCard() {
+            var rows = $("#TbVipInfo").datagrid('getSelected');
+            if (rows == null) {
+                alert("请选择需要操作的行");
+                return;
+            }
+
+            $("#VipUpOrAddFrom").dialog({
+                title: "会员转账",						//弹出界面的标题
+                width: 330,
+                height: 420,
+                href: "/MemberManagement/ChangCardPage",		//弹出界面的url地址
+                modal: true						//是否是模态窗口
+
+            })
+        }
+
+        //导出Excel
+        function MbmgDeriveEc() {
+            
+            location = "/MemberManagement/QueryMemberManagement?MC_CardID=" + $("#txtVipCardNumber").val() + "&MC_Name=" + $("#txtVipName").val() + "&MC_Mobile=" + $("#txtVipTel").val() + "&CL_ID=" + parseInt($("#txtVipGrade").combobox("getValue", "CL_ID")) + "&MC_State=" + parseInt($("#txtState").combobox("getValue", "MC_State")) +"&DcExcel=true";
+           
+        }
+
+        //导入Excel
+        function MbmgToLeadEc() {
+            
+          
+
+        }
+        //查询方法
+        function MbmgQuery() {
+            $("#TbVipInfo").datagrid({
+                url: '/MemberManagement/QueryMemberManagement',
+                queryParams: {
+                    MC_CardID: $("#txtVipCardNumber").val(),
+                    MC_Name: $("#txtVipName").val(),
+                    MC_Mobile: $("#txtVipTel").val(),
+                    CL_ID: parseInt($("#txtVipGrade").combobox("getValue", "CL_ID")),
+                    MC_State: parseInt($("#txtState").combobox("getValue", "MC_State")),
+                    DcExcel:false
+                },
+                columns: [[
+                    { field: 'MC_ID', title: '会员编号' },
+                    { field: 'MC_CardID', title: '会员卡号' },
+                    { field: 'MC_Name', title: '会员姓名' },
+                    { field: 'MC_Mobile', title: '手机号码' },
+                    { field: 'MC_TotalMoney', title: '累计消费' },
+                    { field: 'CI_Name', title: '会员卡状态' },
+                    { field: 'MC_Point', title: '当前积分' },
+                    {
+                        field: 'MC_Sex', title: '性别', formatter: function (date) {
+                            var sex = date == 1 ? "男" : "女";
+                            return sex;
+                        } },
+                    {
+                        field: 'MC_CreateTime', title: '登记时间',//格式化时间操作
+                        formatter: function (date) {
+                            var pa = /.*\((.*)\)/;   //获取    /Date(时间戳) 括号中的字符串时间戳 的正则表达式
+                            var unixtime = date.match(pa)[1].substring(0,10); //通过正则表达式来获取到时间戳的字符串
+                            return getTime(unixtime);
+
+                        }   },
+                    { field: 'CL_LevelName', title: '当前等级' }
+
+                ]],
+                
+                singleSelect: true,
+                pagination: true,
+                pageSize: 10,
+                pageList: [10, 15, 20, 40]
+            });
+        }
+
+       
+</script>
